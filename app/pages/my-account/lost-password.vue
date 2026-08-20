@@ -6,7 +6,7 @@ const busy = ref(false)
 async function submit() {
   busy.value = true
   try {
-    const res = await $fetch<{ message: string }>('/api/forgot-password', {
+    const res = await $fetch<{ message: string }>('/api/auth/forgot-password', {
       method: 'POST', body: { email: email.value },
     })
     done.value = res.message

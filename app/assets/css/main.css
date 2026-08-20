@@ -35,3 +35,215 @@
   }
 }
 
+
+/* Append to app/assets/css/main.css */
+
+@layer components {
+  /* One definition for every text control on the site, so the login form, the
+     account pages and checkout can't drift apart. */
+  .field {
+    @apply h-11 w-full rounded-xl border border-line bg-white px-4 text-sm text-ink
+           outline-none transition
+           placeholder:text-muted
+           hover:border-neutral-300
+           focus:border-brand focus:ring-2 focus:ring-brand/15
+           disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-muted;
+  }
+
+  /* Same treatment, but free height for textareas. */
+  .field-area {
+    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-sm leading-relaxed text-ink
+           outline-none transition
+           placeholder:text-muted
+           hover:border-neutral-300
+           focus:border-brand focus:ring-2 focus:ring-brand/15;
+  }
+
+  /* Red border on the control itself, not just a message underneath — the
+     error is easier to find when the field is what's marked. */
+  .field-error {
+    @apply border-price focus:border-price focus:ring-price/15;
+  }
+
+  .form-label {
+    @apply mb-1.5 block text-[13px] font-medium text-ink;
+  }
+
+  .form-hint {
+    @apply mt-1.5 text-xs text-muted;
+  }
+
+  .form-error {
+    @apply mt-1.5 text-xs text-price;
+  }
+
+  .btn-primary {
+    @apply inline-flex h-11 cursor-pointer items-center justify-center rounded-xl bg-brand px-8
+           text-sm font-medium text-white transition
+           hover:bg-brand-600
+           disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-muted;
+  }
+
+  .btn-ghost {
+    @apply inline-flex h-11 cursor-pointer items-center justify-center rounded-xl border border-line px-8
+           text-sm text-ink transition
+           hover:border-brand hover:text-brand
+           disabled:cursor-not-allowed disabled:opacity-40;
+  }
+}
+
+/* Chrome paints autofilled inputs pale blue and ignores background-color.
+   A large inset shadow is the only thing that actually covers it. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
+  -webkit-text-fill-color: var(--color-ink);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+
+/*
+  Replaces the `.product-content` rules in the <style scoped> block of
+  app/pages/urun/[slug].vue. Keep the .img-* transition rules above it.
+
+  Written out rather than using Tailwind's `prose`, which needs
+  @tailwindcss/typography — not installed here. :deep is required to reach
+  v-html output, since scoped styles don't apply to runtime-injected markup.
+*/
+
+.product-content {
+  margin-inline: auto;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--color-muted, #4b5563);
+}
+
+.product-content :deep(p) {
+  margin-bottom: 1rem;
+}
+
+.product-content :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.product-content :deep(strong),
+.product-content :deep(b) {
+  color: var(--color-ink, #111827);
+  font-weight: 600;
+}
+
+/*
+  The import left section headings as ordinary paragraphs containing nothing
+  but bold text — "Ürün Özellikleri:", "Kullanım Alanları:". Promoting them
+  visually is what breaks the wall of text into sections.
+*/
+.product-content :deep(p:has(> strong:only-child)) {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.0625rem;
+  line-height: 1.4;
+}
+
+.product-content :deep(p:has(> strong:only-child) strong) {
+  font-weight: 600;
+}
+
+.product-content :deep(p:first-child:has(> strong:only-child)) {
+  margin-top: 0;
+}
+
+/*
+  Label-value lines — "Model: NCF29AxM", "Frekans: 433 MHz". They read as a
+  list, so they sit tighter together than prose paragraphs.
+*/
+.product-content :deep(p:has(> strong:first-child):not(:has(> strong:only-child))) {
+  margin-bottom: 0.35rem;
+}
+
+.product-content :deep(h2),
+.product-content :deep(h3),
+.product-content :deep(h4) {
+  margin: 2rem 0 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-ink, #111827);
+}
+
+.product-content :deep(h2) { font-size: 1.25rem; }
+.product-content :deep(h3) { font-size: 1.0625rem; }
+.product-content :deep(h4) { font-size: 1rem; }
+
+.product-content :deep(ul),
+.product-content :deep(ol) {
+  margin: 0 0 1.25rem 0;
+  padding-left: 1.25rem;
+}
+
+.product-content :deep(ul) { list-style: disc; }
+.product-content :deep(ol) { list-style: decimal; }
+
+.product-content :deep(li) {
+  margin-bottom: 0.45rem;
+  padding-left: 0.35rem;
+}
+
+.product-content :deep(li::marker) {
+  color: var(--color-brand, #2563eb);
+}
+
+/* Content images are photos, not decoration — give them room and a frame so
+   they don't collide with the text above and below. */
+.product-content :deep(img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.75rem auto;
+  border: 1px solid var(--color-line, #e5e7eb);
+  border-radius: 0.75rem;
+}
+
+.product-content :deep(a) {
+  color: var(--color-brand, #2563eb);
+  text-underline-offset: 2px;
+}
+
+.product-content :deep(a:hover) {
+  text-decoration: underline;
+}
+
+.product-content :deep(blockquote) {
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--color-line, #e5e7eb);
+  font-style: italic;
+}
+
+.product-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.product-content :deep(th),
+.product-content :deep(td) {
+  border: 1px solid var(--color-line, #e5e7eb);
+  padding: 0.6rem 0.9rem;
+  text-align: left;
+}
+
+.product-content :deep(th) {
+  background: var(--color-neutral-50, #f9fafb);
+  font-weight: 500;
+  color: var(--color-ink, #111827);
+}
+
+.product-content :deep(hr) {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-line, #e5e7eb);
+}

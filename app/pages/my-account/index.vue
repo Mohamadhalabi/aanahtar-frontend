@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { login } = useAuth()
+const { login, logout, customer, isLoggedIn } = useAuth()
 
 const loginForm = reactive({ email: '', password: '' })
 const regForm = reactive({
@@ -17,7 +17,7 @@ async function doLogin() {
   busy.value = true
   try {
     await login(loginForm.email, loginForm.password)
-    await navigateTo('/')
+    // No redirect: isLoggedIn flips and this page becomes the dashboard.
   } catch (e: any) {
     loginError.value = e?.data?.data?.message ?? e?.data?.message ?? 'Giriş yapılamadı.'
   } finally {
@@ -30,7 +30,7 @@ async function doRegister() {
   regDone.value = ''
   busy.value = true
   try {
-    const res = await $fetch<{ message: string }>('/api/register', { method: 'POST', body: regForm })
+    const res = await $fetch<{ message: string }>('/api/auth/register', { method: 'POST', body: regForm })
     regDone.value = res.message
   } catch (e: any) {
     regError.value = e?.data?.message ?? 'Kayıt tamamlanamadı.'
@@ -56,7 +56,33 @@ useSeoMeta({ title: 'Hesabım' })
       <span class="text-ink">Hesabım</span>
     </nav>
 
-    <div class="relative grid gap-14 lg:grid-cols-2 lg:gap-24">
+    <!-- Signed in: the dashboard. The forms below are only for guests, so the
+         whole page swaps rather than redirecting anywhere. -->
+    <template v-if="isLoggedIn">
+      <h1 class="mb-10 text-center text-3xl text-ink">Hesabım</h1>
+
+      <div class="grid gap-10 lg:grid-cols-[18rem_1fr] lg:gap-16">
+        <AccountNav />
+
+        <section>
+          <p class="text-sm leading-relaxed text-ink">
+            Merhaba <strong class="font-semibold">{{ customer?.name }}</strong>
+            (<span class="text-muted">{{ customer?.name }}</span> değil misiniz?
+            <button type="button" class="cursor-pointer text-brand hover:underline" @click="logout()">
+              Çıkış yapın
+            </button>)
+          </p>
+
+          <p class="mt-4 text-sm leading-relaxed text-muted">
+            Hesap panonuzdan son siparişlerinizi görüntüleyebilir, gönderim ve fatura
+            adreslerinizi yönetebilir ve şifreniz ile hesap ayrıntılarınızı düzenleyebilirsiniz.
+          </p>
+        </section>
+      </div>
+    </template>
+
+    <!-- Guests: login on the left, registration on the right. -->
+    <div v-else class="relative grid gap-14 lg:grid-cols-2 lg:gap-24">
       <!-- Divider with the "or" badge, desktop only -->
       <div class="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-line lg:block">
         <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-line bg-white px-3 py-1.5 text-xs italic text-muted">

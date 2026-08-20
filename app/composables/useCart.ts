@@ -7,13 +7,16 @@ export interface CartItem {
   quantity: number
   unit_price: number | null
   line_total: number | null
+  is_preorder: boolean
 }
 
 export interface Cart {
   token: string
+  price_visible: boolean
   items: CartItem[]
   subtotal: number | null
   free_shipping: boolean
+  has_preorder: boolean
   currency: string | null
 }
 
@@ -29,6 +32,11 @@ export function useCart() {
     path: '/',
   })
 
+  // Written by useAuth on login. Cart requests need it too: the cart endpoints
+  // carry no auth middleware, so without this header the backend sees a guest
+  // and strips every price — even for a signed-in customer.
+  const auth = useCookie<string | null>('auth_token')
+
   const count = computed(() =>
     cart.value?.items.reduce((n, i) => n + i.quantity, 0) ?? 0)
 
@@ -37,12 +45,11 @@ export function useCart() {
     try {
       const headers: Record<string, string> = { ...(opts.headers ?? {}) }
       if (token.value) headers['X-Cart-Token'] = token.value
+      if (auth.value) headers.Authorization = `Bearer ${auth.value}`
 
       const res = await $fetch<Cart>(url, { credentials: 'include', ...opts, headers })
-
       cart.value = res
       if (res?.token) token.value = res.token
-
       return res
     } finally {
       pending.value = false

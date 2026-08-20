@@ -7,6 +7,8 @@ const scope = ref('')
 
 // Shared with AppNav so the hamburger here can open the drawer there.
 const drawer = useState('nav-drawer', () => false)
+// Shared with CartDrawer.
+const cartDrawer = useState('cart-drawer', () => false)
 
 function search() {
   if (!term.value.trim()) return
@@ -74,18 +76,25 @@ function search() {
           </svg>
         </NuxtLink>
 
-        <NuxtLink to="/sepet" class="relative text-ink hover:text-brand" aria-label="Sepet">
+        <!-- Opens the drawer rather than navigating: /sepet still exists and is
+             reachable from inside it. -->
+        <button
+          type="button"
+          class="relative cursor-pointer text-ink hover:text-brand"
+          aria-label="Sepet"
+          @click="cartDrawer = true"
+        >
           <svg class="h-6 w-6 sm:h-7 sm:w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
             <path d="M3 5h3l2.2 10.5h10L20.5 8H7" /><circle cx="9.5" cy="19.5" r="1.6" /><circle cx="17.5" cy="19.5" r="1.6" />
           </svg>
           <!-- Client-only: the cart is per-visitor and must never be baked
                into HTML that gets cached and shared. -->
           <ClientOnly>
-            <span class="absolute -bottom-1 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold text-white" v-if="count">
+            <span v-if="count" class="absolute -bottom-1 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold text-white">
               {{ count }}
             </span>
           </ClientOnly>
-        </NuxtLink>
+        </button>
       </div>
     </div>
 
@@ -111,5 +120,7 @@ function search() {
         </button>
       </div>
     </div>
+
+    <CartDrawer />
   </div>
 </template>
