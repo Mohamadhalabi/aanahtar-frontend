@@ -77,7 +77,7 @@ function setQuery(patch: Record<string, any>, keepPage = false) {
     const v = next[k]
     if (v === '' || v == null || (Array.isArray(v) && !v.length)) delete next[k]
   }
-  router.push({ path: '/magaza', query: next })
+  router.push({ path: '/shop', query: next })
 }
 
 function setBrands(list: string[]) {
@@ -92,7 +92,7 @@ function clearFilters() {
   // The search term survives: it's navigation, not refinement.
   const next: Record<string, any> = {}
   if (q.value) next.q = q.value
-  router.push({ path: '/magaza', query: next })
+  router.push({ path: '/shop', query: next })
 }
 
 /* --- Active filter chips ---------------------------------------------- */
@@ -191,7 +191,7 @@ useSeoMeta({
       <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="m9 6 6 6-6 6" />
       </svg>
-      <NuxtLink to="/magaza" class="rounded-md bg-neutral-100 px-3 py-1.5 text-ink transition hover:text-brand">
+      <NuxtLink to="/shop" class="rounded-md bg-neutral-100 px-3 py-1.5 text-ink transition hover:text-brand">
         Mağaza
       </NuxtLink>
       <template v-if="q">

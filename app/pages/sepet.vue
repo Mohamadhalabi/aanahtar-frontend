@@ -64,7 +64,7 @@ useSeoMeta({ title: 'Sepetim' })
         <path d="M3 5h3l2.2 10.5h10L20.5 8H7" /><circle cx="9.5" cy="19.5" r="1.5" /><circle cx="17.5" cy="19.5" r="1.5" />
       </svg>
       <p class="mt-5 text-sm text-muted">Sepetinizde ürün bulunmuyor.</p>
-      <NuxtLink to="/magaza" class="btn-primary mt-6">Alışverişe başla</NuxtLink>
+      <NuxtLink to="/shop" class="btn-primary mt-6">Alışverişe başla</NuxtLink>
     </div>
 
     <template v-else>

@@ -120,7 +120,7 @@ useSeoMeta({ title: 'Ödeme' })
 
     <div v-else-if="ready && !items.length" class="rounded-lg border border-line px-6 py-16 text-center">
       <p class="text-sm text-muted">Sepetinizde ürün bulunmuyor.</p>
-      <NuxtLink to="/magaza" class="btn-primary mt-6">Alışverişe başla</NuxtLink>
+      <NuxtLink to="/shop" class="btn-primary mt-6">Alışverişe başla</NuxtLink>
     </div>
 
     <div v-else class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem]">

@@ -80,7 +80,7 @@ async function setQty(id: number, qty: number) {
               <path d="M3 5h3l2.2 10.5h10L20.5 8H7" /><circle cx="9.5" cy="19.5" r="1.5" /><circle cx="17.5" cy="19.5" r="1.5" />
             </svg>
             <p class="mt-4 text-sm text-muted">Sepetiniz boş.</p>
-            <NuxtLink to="/magaza" class="btn-ghost mt-6" @click="open = false">Alışverişe başla</NuxtLink>
+            <NuxtLink to="/shop" class="btn-ghost mt-6" @click="open = false">Alışverişe başla</NuxtLink>
           </div>
 
           <ul v-else class="divide-y divide-line">

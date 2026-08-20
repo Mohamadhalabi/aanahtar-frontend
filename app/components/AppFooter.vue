@@ -65,8 +65,8 @@ const remotes = computed(() => categories.value.filter(c => /kumanda/i.test(c.na
           <h4 class="mb-3 font-semibold text-ink">Anadolu Anahtar</h4>
           <ul class="space-y-2 text-[13px] text-neutral-600">
             <li><NuxtLink to="/" class="hover:text-brand-500">Anasayfa</NuxtLink></li>
-            <li><NuxtLink to="/magaza" class="hover:text-brand-500">Mağaza</NuxtLink></li>
-            <li><NuxtLink to="/iletisim" class="hover:text-brand-500">İletişim</NuxtLink></li>
+            <li><NuxtLink to="/shop" class="hover:text-brand-500">Mağaza</NuxtLink></li>
+            <li><NuxtLink to="/contact-us" class="hover:text-brand-500">İletişim</NuxtLink></li>
             <li><NuxtLink to="/hakkimizda" class="hover:text-brand-500">Hakkımızda</NuxtLink></li>
             <li class="font-semibold text-price">5000 TL VE ÜZERİ ÜCRETSİZ KARGO</li>
           </ul>

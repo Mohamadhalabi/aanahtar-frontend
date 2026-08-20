@@ -45,7 +45,7 @@ useSeoMeta({ title: 'Siparişler' })
 
         <div v-else-if="!orders.length" class="rounded-lg border border-line px-6 py-12 text-center">
           <p class="text-sm text-muted">Henüz bir sipariş vermediniz.</p>
-          <NuxtLink to="/magaza" class="mt-6 inline-flex h-11 items-center rounded-full bg-neutral-100 px-8 text-sm text-ink transition hover:bg-brand hover:text-white">
+          <NuxtLink to="/shop" class="mt-6 inline-flex h-11 items-center rounded-full bg-neutral-100 px-8 text-sm text-ink transition hover:bg-brand hover:text-white">
             Alışverişe başla
           </NuxtLink>
         </div>

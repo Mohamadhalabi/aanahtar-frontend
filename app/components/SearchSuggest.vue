@@ -90,7 +90,7 @@ function go(item: Suggestion) {
 function seeAll() {
   emit('close')
   navigateTo({
-    path: '/magaza',
+    path: '/shop',
     query: { q: props.term, ...(props.category ? { category: props.category } : {}) },
   })
 }

@@ -19,7 +19,7 @@ function search() {
   if (!term.value.trim()) return
   closeSuggest()
   navigateTo({
-    path: '/magaza',
+    path: '/shop',
     query: { q: term.value, ...(scope.value ? { category: scope.value } : {}) },
   })
 }
