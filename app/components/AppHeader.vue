@@ -10,12 +10,53 @@ const drawer = useState('nav-drawer', () => false)
 // Shared with CartDrawer.
 const cartDrawer = useState('cart-drawer', () => false)
 
+const desktopFocus = ref(false)
+const mobileFocus = ref(false)
+const desktopSuggest = ref<any>(null)
+const mobileSuggest = ref<any>(null)
+
 function search() {
   if (!term.value.trim()) return
+  closeSuggest()
   navigateTo({
     path: '/magaza',
     query: { q: term.value, ...(scope.value ? { category: scope.value } : {}) },
   })
+}
+
+function closeSuggest() {
+  desktopFocus.value = false
+  mobileFocus.value = false
+}
+
+/** Blur fires before the dropdown's mousedown lands, hence the delay. */
+function blurLater(which: 'desktop' | 'mobile') {
+  setTimeout(() => {
+    if (which === 'desktop') desktopFocus.value = false
+    else mobileFocus.value = false
+  }, 150)
+}
+
+function onKey(e: KeyboardEvent, which: 'desktop' | 'mobile') {
+  const panel = which === 'desktop' ? desktopSuggest.value : mobileSuggest.value
+  if (!panel) return
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    panel.move(1)
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    panel.move(-1)
+  } else if (e.key === 'Escape') {
+    closeSuggest()
+  }
+}
+
+function onEnter(which: 'desktop' | 'mobile') {
+  const panel = which === 'desktop' ? desktopSuggest.value : mobileSuggest.value
+  // Falls back to a normal search when nothing in the list is highlighted.
+  if (panel) panel.enter()
+  else search()
 }
 </script>
 
@@ -43,14 +84,18 @@ function search() {
         />
       </NuxtLink>
 
-      <div class="hidden flex-1 lg:block">
+      <div class="relative hidden flex-1 lg:block">
         <div class="flex h-[46px] items-center overflow-hidden rounded-full border-2 border-brand bg-white pl-6">
           <input
             v-model="term"
             type="search"
             placeholder="Ürün Ara"
+            autocomplete="off"
             class="h-full flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
-            @keyup.enter="search"
+            @focus="desktopFocus = true"
+            @blur="blurLater('desktop')"
+            @keydown="onKey($event, 'desktop')"
+            @keyup.enter="onEnter('desktop')"
           >
           <select v-model="scope" class="h-full max-w-56 cursor-pointer bg-transparent pr-3 text-sm text-ink outline-none">
             <option value="">Tüm Kategoriler</option>
@@ -67,6 +112,8 @@ function search() {
             </svg>
           </button>
         </div>
+
+        <SearchSuggest ref="desktopSuggest" :term="term" :category="scope" :focused="desktopFocus" @close="closeSuggest" />
       </div>
 
       <div class="ml-auto flex shrink-0 items-center gap-4 sm:gap-5 lg:gap-7">
@@ -99,14 +146,18 @@ function search() {
     </div>
 
     <!-- Mobile search -->
-    <div class="wrap pb-3 sm:pb-4 lg:hidden">
+    <div class="wrap relative pb-3 sm:pb-4 lg:hidden">
       <div class="flex h-11 items-center overflow-hidden rounded-full border-2 border-brand bg-white pl-5">
         <input
           v-model="term"
           type="search"
           placeholder="Ürün Ara"
+          autocomplete="off"
           class="h-full min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
-          @keyup.enter="search"
+          @focus="mobileFocus = true"
+          @blur="blurLater('mobile')"
+          @keydown="onKey($event, 'mobile')"
+          @keyup.enter="onEnter('mobile')"
         >
         <button
           type="button"
@@ -118,6 +169,10 @@ function search() {
             <circle cx="11" cy="11" r="7" /><path d="m20 20-3.8-3.8" />
           </svg>
         </button>
+      </div>
+
+      <div class="absolute inset-x-4 top-full">
+        <SearchSuggest ref="mobileSuggest" :term="term" :focused="mobileFocus" @close="closeSuggest" />
       </div>
     </div>
 

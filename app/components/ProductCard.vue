@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import type { ProductCard } from '~/types/catalog'
+// Explicit rather than relying on auto-import: if Nuxt isn't scanning
+// app/utils, `highlight` is undefined and every card fails to render.
+import { highlight } from '~/utils/highlight'
 
-const props = defineProps<{ product: ProductCard }>()
+const props = defineProps<{
+  product: ProductCard
+  /** Search term to mark in the title. Omitted everywhere except results. */
+  highlightTerm?: string
+}>()
 
 const { add, pending } = useCart()
 const qty = ref(1)
@@ -29,9 +36,13 @@ async function addToCart() {
     <NuxtLink :to="`/urun/${product.slug}/`" class="block">
       <p class="mb-1.5 truncate text-[11px] text-muted">{{ product.category }}</p>
 
-      <h3 class="mb-3 h-9 overflow-hidden text-[13px] font-medium leading-[1.15rem] text-ink transition group-hover:text-brand">
-        {{ product.title }}
-      </h3>
+      <!-- highlight() escapes the text and only injects <mark>, so this v-html
+           is safe. With no term it returns the plain escaped title, which is
+           what every non-search usage gets. -->
+      <h3
+        class="mb-3 h-9 overflow-hidden text-[13px] font-medium leading-[1.15rem] text-ink transition group-hover:text-brand [&_mark]:bg-brand/15 [&_mark]:font-semibold [&_mark]:text-brand"
+        v-html="highlight(product.title, highlightTerm ?? '')"
+      />
 
       <div class="relative aspect-square">
         <NuxtImg
