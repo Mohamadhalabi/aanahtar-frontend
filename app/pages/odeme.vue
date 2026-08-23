@@ -232,12 +232,6 @@ useSeoMeta({ title: 'Ödeme' })
                 <dd class="text-ink">{{ formatPrice(subtotal) }}</dd>
               </div>
               <div class="flex justify-between px-4 py-3">
-                <dt class="text-muted">Kargo</dt>
-                <dd :class="shipping === 0 ? 'text-green-600' : 'text-ink'">
-                  {{ shipping === 0 ? 'Ücretsiz' : formatPrice(shipping) }}
-                </dd>
-              </div>
-              <div class="flex justify-between px-4 py-3">
                 <dt class="text-muted">KDV (%20)</dt>
                 <dd class="text-ink">{{ formatPrice(tax) }}</dd>
               </div>

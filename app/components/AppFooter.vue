@@ -67,7 +67,7 @@ const remotes = computed(() => categories.value.filter(c => /kumanda/i.test(c.na
             <li><NuxtLink to="/" class="hover:text-brand-500">Anasayfa</NuxtLink></li>
             <li><NuxtLink to="/shop" class="hover:text-brand-500">Mağaza</NuxtLink></li>
             <li><NuxtLink to="/contact-us" class="hover:text-brand-500">İletişim</NuxtLink></li>
-            <li><NuxtLink to="/hakkimizda" class="hover:text-brand-500">Hakkımızda</NuxtLink></li>
+            <li><NuxtLink to="/about" class="hover:text-brand-500">Hakkımızda</NuxtLink></li>
             <li class="font-semibold text-price">5000 TL VE ÜZERİ ÜCRETSİZ KARGO</li>
           </ul>
         </div>

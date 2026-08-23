@@ -17,7 +17,7 @@ export interface Cart {
   subtotal: number | null
   free_shipping: boolean
   has_preorder: boolean
-  currency: string | null
+  currency: { code: string; symbol: string; rate: number } | null
 }
 
 export function useCart() {
@@ -37,6 +37,8 @@ export function useCart() {
   // and strips every price — even for a signed-in customer.
   const auth = useCookie<string | null>('auth_token')
 
+  const currency = useCurrencyCode()
+
   const count = computed(() =>
     cart.value?.items.reduce((n, i) => n + i.quantity, 0) ?? 0)
 
@@ -46,6 +48,8 @@ export function useCart() {
       const headers: Record<string, string> = { ...(opts.headers ?? {}) }
       if (token.value) headers['X-Cart-Token'] = token.value
       if (auth.value) headers.Authorization = `Bearer ${auth.value}`
+      // Cart totals are converted server-side like everything else.
+      if (currency.value) headers['X-Currency'] = currency.value
 
       const res = await $fetch<Cart>(url, { credentials: 'include', ...opts, headers })
       cart.value = res

@@ -1,10 +1,41 @@
+<script setup lang="ts">
+const { code, list, current, load, setCurrency } = useCurrency()
+
+// Fetched during SSR: formatPrice needs the symbol at first paint, otherwise
+// every price renders with the fallback for a frame.
+await load()
+
+const switching = ref(false)
+
+async function onChange(event: Event) {
+  const next = (event.target as HTMLSelectElement).value
+  switching.value = true
+  try {
+    await setCurrency(next)
+  } finally {
+    switching.value = false
+  }
+}
+</script>
+
 <template>
   <div class="border-b border-line bg-white">
     <div class="wrap flex h-11 items-center justify-between text-[13px] text-ink">
       <div class="flex items-center">
-        <select class="mr-4 h-7 cursor-pointer rounded border border-line bg-white px-2 text-[13px] text-ink" aria-label="Para birimi">
-          <option>TRY</option>
+        <select
+          :value="code ?? current.code"
+          :disabled="switching || list.length < 2"
+          class="mr-4 h-7 cursor-pointer rounded border border-line bg-white px-2 text-[13px] text-ink disabled:cursor-default disabled:opacity-70"
+          aria-label="Para birimi"
+          @change="onChange"
+        >
+          <option v-for="c in list" :key="c.code" :value="c.code">
+            {{ c.code }}
+          </option>
+          <!-- Placeholder until the list arrives, so the control isn't blank. -->
+          <option v-if="!list.length" :value="current.code">{{ current.code }}</option>
         </select>
+
         <span class="mr-4 hidden h-4 w-px bg-line sm:block" />
         <NuxtLink to="/subelerimiz" class="hidden items-center gap-1.5 hover:text-brand sm:flex">
           <svg class="h-4 w-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -13,7 +44,7 @@
           Şubelerimiz
         </NuxtLink>
         <span class="mx-4 hidden h-4 w-px bg-line sm:block" />
-        <NuxtLink to="/ekip-uyesi" class="hidden hover:text-brand sm:block">Ekip Üyesi</NuxtLink>
+        <NuxtLink to="/contact-us" class="hidden hover:text-brand sm:block">Ekip Üyesi</NuxtLink>
       </div>
 
       <div class="flex items-center">

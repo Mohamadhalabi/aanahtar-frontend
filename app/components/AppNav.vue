@@ -81,7 +81,7 @@ watch(() => route.fullPath, () => { drawer.value = false })
             <NuxtLink to="/" class="text-ink hover:text-brand">Anasayfa</NuxtLink>
             <NuxtLink to="/shop" class="text-ink hover:text-brand">Mağaza</NuxtLink>
             <NuxtLink to="/contact-us" class="text-ink hover:text-brand">İletişim</NuxtLink>
-            <NuxtLink to="/hakkimizda" class="text-ink hover:text-brand">Hakkımızda</NuxtLink>
+            <NuxtLink to="/about" class="text-ink hover:text-brand">Hakkımızda</NuxtLink>
             <span class="font-semibold text-price">5000 TL VE ÜZERİ ÜCRETSİZ KARGO</span>
           </nav>
         </div>
@@ -138,7 +138,7 @@ watch(() => route.fullPath, () => { drawer.value = false })
             <li><NuxtLink to="/" class="block px-5 py-3 text-[15px] text-ink">Anasayfa</NuxtLink></li>
             <li><NuxtLink to="/shop" class="block px-5 py-3 text-[15px] text-ink">Mağaza</NuxtLink></li>
             <li><NuxtLink to="/contact-us" class="block px-5 py-3 text-[15px] text-ink">İletişim</NuxtLink></li>
-            <li><NuxtLink to="/hakkimizda" class="block px-5 py-3 text-[15px] text-ink">Hakkımızda</NuxtLink></li>
+            <li><NuxtLink to="/about" class="block px-5 py-3 text-[15px] text-ink">Hakkımızda</NuxtLink></li>
           </ul>
         </nav>
       </div>
