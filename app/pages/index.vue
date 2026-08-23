@@ -87,13 +87,30 @@ useSeoMeta({
   <div v-if="data">
     <!-- Hero -->
     <section v-if="data.hero.length" class="relative">
+      <!--
+        Every slide is stacked in the same place and only opacity changes, so
+        both the outgoing and incoming image are painted during the crossfade.
+        Toggling `hidden` — as this did before — can't animate at all, because
+        display:none isn't a transitionable property.
+
+        The first slide stays in normal flow to give the section its height;
+        the rest are absolutely positioned on top of it. That keeps the layout
+        stable without hardcoding an aspect ratio the banners might not match.
+      -->
       <div class="relative w-full overflow-hidden bg-neutral-100">
         <component
           v-for="(s, i) in data.hero" :key="i"
           :is="s.link ? 'a' : 'div'"
           :href="s.link ?? undefined"
-          class="transition-opacity duration-500"
-          :class="i === heroIndex ? 'block opacity-100' : 'hidden'"
+          class="inset-0 transition-opacity duration-700 ease-in-out motion-reduce:transition-none"
+          :class="[
+            i === 0 ? 'relative' : 'absolute',
+            i === heroIndex ? 'opacity-100' : 'opacity-0',
+            // The hidden slides mustn't swallow clicks meant for the visible
+            // one, or for the arrows sitting above them.
+            i === heroIndex ? '' : 'pointer-events-none',
+          ]"
+          :aria-hidden="i !== heroIndex"
         >
           <img
             :src="s.image"
@@ -106,7 +123,7 @@ useSeoMeta({
         <button
           v-if="data.hero.length > 1"
           type="button" aria-label="Önceki"
-          class="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/70 text-ink transition hover:bg-white"
+          class="absolute left-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/70 text-ink transition hover:bg-white"
           @click="move(-1)"
         >
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6" /></svg>
@@ -115,18 +132,18 @@ useSeoMeta({
         <button
           v-if="data.hero.length > 1"
           type="button" aria-label="Sonraki"
-          class="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/70 text-ink transition hover:bg-white"
+          class="absolute right-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/70 text-ink transition hover:bg-white"
           @click="move(1)"
         >
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6" /></svg>
         </button>
 
-        <div v-if="data.hero.length > 1" class="absolute inset-x-0 bottom-4 flex justify-center gap-2">
+        <div v-if="data.hero.length > 1" class="absolute inset-x-0 bottom-4 z-10 flex justify-center gap-2">
           <button
             v-for="(_, i) in data.hero" :key="i"
             type="button" :aria-label="`Slayt ${i + 1}`"
-            class="h-2 cursor-pointer rounded-full transition-all"
-            :class="i === heroIndex ? 'w-6 bg-white' : 'w-2 bg-white/60'"
+            class="h-2 cursor-pointer rounded-full transition-all duration-300"
+            :class="i === heroIndex ? 'w-6 bg-white' : 'w-2 bg-white/60 hover:bg-white/80'"
             @click="heroIndex = i"
           />
         </div>
