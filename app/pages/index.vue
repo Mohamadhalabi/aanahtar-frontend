@@ -245,25 +245,33 @@ useSeoMeta({
       <ProductCarousel title="Yeni ürünler" :products="data.new_products" />
     </section>
 
-    <!-- Below the fold. Each component mounts only when scrolled near, and
-         fetches its own data at that point.
+    <!--
+      Below the fold. Each component mounts only when scrolled near, and
+      fetches its own data at that point.
 
-         The min-heights matter: with nothing rendered yet these three would
-         otherwise stack at zero height in the same place, all intersect at
-         once, and fire three requests immediately — which is the thing we're
-         trying to avoid. -->
+      DeferredSection, not LazySection: Nuxt reserves the `Lazy` prefix for the
+      dynamic-import wrappers it generates for every component, so a component
+      actually named LazySection collides with it. Dev resolved it one way and
+      the production build the other, which is why these three rendered
+      locally and came back empty on the server.
+
+      The min-heights matter: with nothing rendered yet these three would
+      otherwise stack at zero height in the same place, all intersect at once,
+      and fire three requests immediately — which is the thing we're trying to
+      avoid.
+    -->
     <div class="min-h-[560px]">
-      <LazySection><FeaturedTabs /></LazySection>
+      <DeferredSection><FeaturedTabs /></DeferredSection>
     </div>
 
     <div class="min-h-[560px]">
-      <LazySection><DealTabs /></LazySection>
+      <DeferredSection><DealTabs /></DeferredSection>
     </div>
 
     <div class="min-h-[560px]">
-      <LazySection>
+      <DeferredSection>
         <CollectionCarousel title="Emülatörler ve diğer kategoriler" />
-      </LazySection>
+      </DeferredSection>
     </div>
 
   </div>
