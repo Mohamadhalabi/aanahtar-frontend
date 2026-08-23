@@ -187,7 +187,7 @@ async function addFeatured() {
                 >
                   <button
                     type="button" aria-label="Azalt"
-                    class="h-full w-11 shrink-0 cursor-pointer text-lg leading-none text-muted transition hover:bg-neutral-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
+                    class="h-11 w-11 shrink-0 cursor-pointer text-lg leading-none text-muted transition hover:bg-neutral-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
                     :disabled="qty <= 1 || !featured.in_stock"
                     @click="setQty(qty - 1)"
                   >−</button>

@@ -9,10 +9,11 @@
   --color-ink:       #3a3a3a;
   --color-muted:     #7c8896;
   --color-line:      #e6e8eb;
-  --color-price:     #d0021b;
+  --color-price:     #2282af;
+  --color-danger:    #d0021b;
+  --color-sale:      #d0021b;
 
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-
 
   --text-sm: 0.8125rem;
   --text-sm--line-height: 1.5;

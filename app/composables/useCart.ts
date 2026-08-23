@@ -40,11 +40,17 @@ export function useCart() {
   const auth = useAuthToken()
 
   const currency = useCurrencyCode()
+  const toast = useToast()
 
   const count = computed(() =>
     cart.value?.items.reduce((n, i) => n + i.quantity, 0) ?? 0)
 
-  async function call(url: string, opts: any = {}) {
+  /**
+   * @param notifyErrors Off for load(), which runs unattended on every page
+   *   load — a failure there shouldn't put a toast in front of someone who
+   *   never touched the cart.
+   */
+  async function call(url: string, opts: any = {}, notifyErrors = true) {
     pending.value = true
     try {
       const headers: Record<string, string> = { ...(opts.headers ?? {}) }
@@ -57,18 +63,50 @@ export function useCart() {
       cart.value = res
       if (res?.token) token.value = res.token
       return res
+    } catch (e: any) {
+      if (notifyErrors) {
+        toast.error(e?.data?.message ?? 'Sepet güncellenemedi. Lütfen tekrar deneyin.')
+      }
+      // Rethrown so callers awaiting this still see the failure.
+      throw e
     } finally {
       pending.value = false
     }
   }
 
-  const load   = () => call('/api/cart')
-  const add    = (product_id: number, quantity = 1) =>
-    call('/api/cart/items', { method: 'POST', body: { product_id, quantity } })
+  const load = () => call('/api/cart', {}, false)
+
+  async function add(product_id: number, quantity = 1) {
+    const res = await call('/api/cart/items', { method: 'POST', body: { product_id, quantity } })
+
+    // Name and photo come from the response rather than being passed in, so
+    // every call site gets them without knowing anything about toasts.
+    const item = res.items.find(i => i.product_id === product_id)
+    toast.success(
+      item ? `${item.name} sepete eklendi.` : 'Ürün sepete eklendi.',
+      { image: item?.image },
+    )
+
+    return res
+  }
+
+  /** Quantity changes stay silent: the stepper already shows the new number,
+      and a toast per tap turns a nudge from 1 to 4 into three cards. */
   const update = (id: number, quantity: number) =>
     call(`/api/cart/items/${id}`, { method: 'PATCH', body: { quantity } })
-  const remove = (id: number) =>
-    call(`/api/cart/items/${id}`, { method: 'DELETE' })
+
+  async function remove(id: number) {
+    // Captured first — after the request the item is gone from the response.
+    const item = cart.value?.items.find(i => i.id === id)
+
+    const res = await call(`/api/cart/items/${id}`, { method: 'DELETE' })
+    toast.info(
+      item ? `${item.name} sepetten kaldırıldı.` : 'Ürün sepetten kaldırıldı.',
+      { image: item?.image },
+    )
+
+    return res
+  }
 
   return { cart, count, pending, token, load, add, update, remove }
 }

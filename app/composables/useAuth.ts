@@ -17,6 +17,7 @@ export function useAuth() {
   // Readable by JS on purpose — useApiFetch attaches it as a bearer header on
   // the client, so httpOnly isn't an option here.
   const token = useAuthToken()
+  const toast = useToast()
 
   function authHeaders(): Record<string, string> {
     return token.value ? { Authorization: `Bearer ${token.value}` } : {}
@@ -47,6 +48,15 @@ export function useAuth() {
     cart.token.value = null
     await cart.load()
 
+    // Deliberately not toasting login failures: the form shows those inline,
+    // right under the fields being corrected, and two reports of one error is
+    // worse than one.
+    toast.success(
+      res.customer.first_name
+        ? `Hoş geldiniz, ${res.customer.first_name}.`
+        : 'Giriş yapıldı.',
+    )
+
     await refreshNuxtData()     // re-fetch products, now with prices
   }
 
@@ -67,6 +77,10 @@ export function useAuth() {
       cart.token.value = null
       cart.cart.value = null
 
+      // Queued before the navigation, since the toast state is global and
+      // survives the route change.
+      toast.info('Çıkış yapıldı.')
+
       await refreshNuxtData()
       await navigateTo('/')
     }
@@ -83,6 +97,7 @@ export function useAuth() {
       const res = await $fetch<{ customer: Customer }>('/api/auth/me', { headers: authHeaders() })
       customer.value = res.customer
     } catch {
+      // Silent: an expired token on page load isn't something the visitor did.
       token.value = null
       customer.value = null
     }

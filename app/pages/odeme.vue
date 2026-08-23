@@ -7,22 +7,37 @@ const SHIPPING_FLAT = 0.00
 
 const { cart, load } = useCart()
 const { customer, isLoggedIn } = useAuth()
+const toast = useToast()
 
 const items = computed(() => cart.value?.items ?? [])
 const subtotal = computed(() => cart.value?.subtotal ?? 0)
-const shipping = computed(() => (subtotal.value >= FREE_SHIPPING_FROM ? 0 : SHIPPING_FLAT))
-const tax = computed(() => Math.round(subtotal.value * TAX_RATE * 100) / 100)
-const total = computed(() => subtotal.value + tax.value + shipping.value)
+
+// Supplied by the backend once a coupon is attached to the cart. Falls back to
+// zero, so the summary is correct while the endpoints are still being built.
+const discount = computed(() => (cart.value as any)?.discount ?? 0)
+const coupon = computed(() => (cart.value as any)?.coupon ?? null)
+
+const discounted = computed(() => Math.max(0, subtotal.value - discount.value))
+const shipping = computed(() => (discounted.value >= FREE_SHIPPING_FROM ? 0 : SHIPPING_FLAT))
+// VAT on the discounted figure, not the gross one — check this matches
+// OrderController, or the customer sees one total and gets charged another.
+const tax = computed(() => Math.round(discounted.value * TAX_RATE * 100) / 100)
+const total = computed(() => discounted.value + tax.value + shipping.value)
 
 const form = reactive({
   first_name: '', last_name: '', email: '', phone: '',
   address: '', postcode: '', state: '', city: '',
+  // Card is not wired up yet, so there's only one option and it's fixed here.
   payment_method: 'havale',
   notes: '',
   terms: false,
 })
 
 const ready = ref(false)
+
+function authHeader() {
+  return { Authorization: `Bearer ${useCookie('auth_token').value}` }
+}
 
 onMounted(async () => {
   if (!cart.value) await load()
@@ -36,9 +51,7 @@ onMounted(async () => {
   }
 
   try {
-    const res = await $fetch<{ address: any }>('/api/account/address', {
-      headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
-    })
+    const res = await $fetch<{ address: any }>('/api/account/address', { headers: authHeader() })
     form.address = res.address?.address ?? ''
     form.city = res.address?.city ?? ''
     form.state = res.address?.state ?? ''
@@ -49,6 +62,59 @@ onMounted(async () => {
 
   ready.value = true
 })
+
+/* --- Coupon ------------------------------------------------------------- */
+
+const couponCode = ref('')
+const couponBusy = ref(false)
+const couponError = ref('')
+
+async function applyCoupon() {
+  const code = couponCode.value.trim()
+  if (!code) return
+
+  couponBusy.value = true
+  couponError.value = ''
+
+  try {
+    // Returns the same cart payload as every other cart endpoint, so the
+    // summary updates from the shared state without a second request.
+    const res = await $fetch<any>('/api/cart/coupon', {
+      method: 'POST',
+      body: { code },
+      headers: { ...authHeader(), 'X-Cart-Token': useCookie('cart_token').value ?? '' },
+    })
+    cart.value = res
+    couponCode.value = ''
+    toast.success('Kupon uygulandı.')
+  } catch (e: any) {
+    // Inline rather than a toast: the message belongs beside the field being
+    // corrected.
+    couponError.value = e?.data?.message ?? 'Kupon uygulanamadı.'
+  } finally {
+    couponBusy.value = false
+  }
+}
+
+async function removeCoupon() {
+  couponBusy.value = true
+  couponError.value = ''
+
+  try {
+    const res = await $fetch<any>('/api/cart/coupon', {
+      method: 'DELETE',
+      headers: { ...authHeader(), 'X-Cart-Token': useCookie('cart_token').value ?? '' },
+    })
+    cart.value = res
+    toast.info('Kupon kaldırıldı.')
+  } catch (e: any) {
+    couponError.value = e?.data?.message ?? 'Kupon kaldırılamadı.'
+  } finally {
+    couponBusy.value = false
+  }
+}
+
+/* --- Submit ------------------------------------------------------------- */
 
 const busy = ref(false)
 const error = ref('')
@@ -63,7 +129,7 @@ async function submit() {
     const res = await $fetch<{ order_number: string; redirect_url: string | null }>('/api/orders', {
       method: 'POST',
       body: form,
-      headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
+      headers: authHeader(),
     })
 
     await load()   // the cart is empty now
@@ -128,7 +194,7 @@ useSeoMeta({ title: 'Ödeme' })
       <div class="min-w-0">
         <h1 class="border-b border-line pb-3 text-xl text-ink">Fatura detayları</h1>
 
-        <p v-if="error" class="mt-5 rounded-lg border border-price/30 bg-price/5 px-4 py-3 text-sm text-price">
+        <p v-if="error" class="mt-5 rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
           {{ error }}
         </p>
 
@@ -226,10 +292,60 @@ useSeoMeta({ title: 'Ödeme' })
               </li>
             </ul>
 
+            <!-- Coupon sits inside the summary box, above the totals it
+                 changes, so the effect is visible in the same glance. -->
+            <div class="border-t border-line px-4 py-3">
+              <div v-if="coupon" class="flex items-center justify-between gap-3">
+                <span class="flex min-w-0 items-center gap-2">
+                  <svg class="h-4 w-4 shrink-0 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z" /><path d="M13 7v10" />
+                  </svg>
+                  <span class="truncate text-[13px] font-medium text-ink">{{ coupon.code }}</span>
+                </span>
+                <button
+                  type="button"
+                  class="shrink-0 cursor-pointer text-xs text-muted underline-offset-2 transition hover:text-danger hover:underline disabled:opacity-50"
+                  :disabled="couponBusy"
+                  @click="removeCoupon"
+                >
+                  Kaldır
+                </button>
+              </div>
+
+              <div v-else>
+                <label for="co-coupon" class="mb-1.5 block text-[13px] text-muted">Kupon kodunuz varsa</label>
+                <div class="flex gap-2">
+                  <input
+                    id="co-coupon"
+                    v-model="couponCode"
+                    type="text"
+                    placeholder="HOSGELDIN10"
+                    autocomplete="off"
+                    class="field h-10 flex-1 uppercase placeholder:normal-case"
+                    :class="couponError && 'field-error'"
+                    @keyup.enter="applyCoupon"
+                  >
+                  <button
+                    type="button"
+                    class="h-10 shrink-0 cursor-pointer rounded-xl border border-line px-4 text-sm text-ink transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="couponBusy || !couponCode.trim()"
+                    @click="applyCoupon"
+                  >
+                    {{ couponBusy ? '…' : 'Uygula' }}
+                  </button>
+                </div>
+                <p v-if="couponError" class="form-error">{{ couponError }}</p>
+              </div>
+            </div>
+
             <dl class="divide-y divide-line border-t border-line text-sm">
               <div class="flex justify-between px-4 py-3">
                 <dt class="text-muted">Ara Toplam</dt>
                 <dd class="text-ink">{{ formatPrice(subtotal) }}</dd>
+              </div>
+              <div v-if="discount > 0" class="flex justify-between px-4 py-3">
+                <dt class="text-muted">İndirim</dt>
+                <dd class="text-brand">−{{ formatPrice(discount) }}</dd>
               </div>
               <div class="flex justify-between px-4 py-3">
                 <dt class="text-muted">KDV (%20)</dt>
@@ -242,26 +358,14 @@ useSeoMeta({ title: 'Ödeme' })
             </dl>
           </div>
 
-          <div class="mt-5 space-y-3">
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-line px-4 py-3">
-              <input v-model="form.payment_method" type="radio" value="havale" class="mt-0.5 accent-[var(--color-brand,#2563eb)]">
-              <span>
-                <span class="block text-sm font-medium text-ink">Banka Havalesi / EFT</span>
-                <span class="mt-1 block text-xs leading-relaxed text-muted">
-                  Sipariş onayından sonra hesap bilgileri tarafınıza iletilecektir.
-                </span>
-              </span>
-            </label>
-
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-line px-4 py-3">
-              <input v-model="form.payment_method" type="radio" value="card" class="mt-0.5 accent-[var(--color-brand,#2563eb)]">
-              <span>
-                <span class="block text-sm font-medium text-ink">Banka / Banka Kartı ile Ödeme</span>
-                <span class="mt-1 block text-xs leading-relaxed text-muted">
-                  Siparişiniz oluşturulduktan sonra ödeme adımına yönlendirileceksiniz.
-                </span>
-              </span>
-            </label>
+          <!-- Card payment is not live yet. Rather than showing it disabled and
+               inviting "why can't I click this", there's one method and it's
+               stated plainly. -->
+          <div class="mt-5 rounded-lg border border-line px-4 py-3">
+            <p class="text-sm font-medium text-ink">Banka Havalesi / EFT</p>
+            <p class="mt-1 text-xs leading-relaxed text-muted">
+              Sipariş onayından sonra hesap bilgileri tarafınıza iletilecektir.
+            </p>
           </div>
 
           <label class="mt-5 flex cursor-pointer items-start gap-2.5 text-[13px] leading-relaxed text-muted">

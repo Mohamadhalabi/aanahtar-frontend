@@ -65,9 +65,14 @@ async function fetchSuggestions(term: string) {
 
 // Debounced: a request per keystroke would fire a dozen queries for one word.
 // Watching the category too, so changing the scope re-runs the current term.
-watch([() => props.term, () => props.category], ([term]) => {
+// `focused` is in the list as well: both the desktop and the mobile instance
+// of this component are mounted at once and share `term`, so without the
+// focus gate every keystroke fired the same query twice.
+watch([() => props.term, () => props.category, () => props.focused], ([term]) => {
   clearTimeout(timer)
   active.value = -1
+
+  if (!props.focused) return
 
   if (String(term).trim().length < 2) {
     items.value = []
@@ -75,8 +80,17 @@ watch([() => props.term, () => props.category], ([term]) => {
     return
   }
 
-  timer = setTimeout(() => fetchSuggestions(String(term)), 250)
+  // Already have results for this term — reopening the panel shouldn't blank
+  // it and re-query.
+  if (items.value.length && String(term) === lastFetched) return
+
+  timer = setTimeout(() => {
+    lastFetched = String(term)
+    fetchSuggestions(String(term))
+  }, 250)
 })
+
+let lastFetched = ''
 
 onUnmounted(() => clearTimeout(timer))
 

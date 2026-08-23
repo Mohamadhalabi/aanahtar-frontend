@@ -29,6 +29,18 @@ function closeSuggest() {
   mobileFocus.value = false
 }
 
+/**
+ * The panel's rows use @mousedown.prevent so the click lands before the blur
+ * cancels it — which means picking a result never blurs the input. After
+ * navigating, the input still holds DOM focus while this flag has been set
+ * false, and clicking it again fires no `focus` event, so the panel could
+ * never reopen without a page refresh. Typing or clicking re-arms it.
+ */
+function openSuggest(which: 'desktop' | 'mobile') {
+  if (which === 'desktop') desktopFocus.value = true
+  else mobileFocus.value = true
+}
+
 /** Blur fires before the dropdown's mousedown lands, hence the delay. */
 function blurLater(which: 'desktop' | 'mobile') {
   setTimeout(() => {
@@ -92,7 +104,9 @@ function onEnter(which: 'desktop' | 'mobile') {
             placeholder="Ürün Ara"
             autocomplete="off"
             class="h-full flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted"
-            @focus="desktopFocus = true"
+            @focus="openSuggest('desktop')"
+            @click="openSuggest('desktop')"
+            @input="openSuggest('desktop')"
             @blur="blurLater('desktop')"
             @keydown="onKey($event, 'desktop')"
             @keyup.enter="onEnter('desktop')"
@@ -154,7 +168,9 @@ function onEnter(which: 'desktop' | 'mobile') {
           placeholder="Ürün Ara"
           autocomplete="off"
           class="h-full min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
-          @focus="mobileFocus = true"
+          @focus="openSuggest('mobile')"
+          @click="openSuggest('mobile')"
+          @input="openSuggest('mobile')"
           @blur="blurLater('mobile')"
           @keydown="onKey($event, 'mobile')"
           @keyup.enter="onEnter('mobile')"

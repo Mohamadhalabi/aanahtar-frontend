@@ -30,6 +30,45 @@ onMounted(() => {
   onUnmounted(() => clearInterval(timer))
 })
 
+/**
+ * The four cards under the hero.
+ *
+ * Hardcoded rather than fetched: these are a fixed piece of shop furniture,
+ * not merchandising that changes weekly, and putting them behind an endpoint
+ * would mean a backend change every time the wording moves. Edit here.
+ *
+ * Images go in public/images/promos/ — square-ish, transparent or white
+ * background, since they sit on a light grey card.
+ */
+const highlights = [
+  {
+    kicker: 'Açma Kapama',
+    title: 'Anadolu Plus',
+    to: '/product-category/acma-kapama/',
+    image: '/images/promos/acma-kapama.webp',
+  },
+  {
+    kicker: 'Uzaktan Çalıştırma',
+    title: 'Anadolu Plus',
+    to: '/product-category/universal-uzaktan-calistirma/',
+    image: '/images/promos/uzaktan-calistirma.webp',
+  },
+  {
+    kicker: 'Lonsdor',
+    title: 'K518Pro Cihazı',
+    note: 'Yeni',
+    to: '/urun/8840-yeni-lonsdor-k518-pro-k518pro-versatile-anahtar-programci/',
+    image: '/images/promos/lonsdor-k518pro.webp',
+  },
+  {
+    kicker: 'Türkiyede Tek',
+    title: 'Pluto JLR',
+    note: 'Distribütör',
+    to: '/urun/8855-pluto-jlr-rangerover-engineering-tool',
+    image: '/images/promos/pluto-jlr.webp',
+  },
+]
+
 const trust = [
   { title: '5000 TL', sub: 'Üzeri Ücretsiz Kargo', d: 'M2 7h11v9H2zM13 10h4l3 3v3h-7zM6 18a1.6 1.6 0 1 0 0-.01M17 18a1.6 1.6 0 1 0 0-.01' },
   { title: '99% Pozitif', sub: 'Geri Bildirim', d: 'M7 11v9H3v-9zM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 17 20H7' },
@@ -92,6 +131,41 @@ useSeoMeta({
           />
         </div>
       </div>
+    </section>
+
+    <!-- Highlight cards. Directly under the hero: this is the first thing a
+         visitor scrolls to, and these are the four things the shop most wants
+         to put in front of them. -->
+    <section class="wrap mt-8">
+      <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <li v-for="h in highlights" :key="h.kicker + h.title">
+          <NuxtLink
+            :to="h.to"
+            class="group flex h-full items-center gap-4 rounded-lg bg-neutral-50 p-4 transition hover:bg-white hover:shadow-[0_8px_26px_rgba(0,0,0,.10)]"
+          >
+            <NuxtImg
+              :src="h.image" :alt="`${h.kicker} ${h.title}`"
+              width="220" height="220" loading="lazy"
+              class="h-24 w-24 shrink-0 object-contain sm:h-28 sm:w-28"
+            />
+
+            <div class="min-w-0">
+              <p class="text-[13px] leading-snug text-muted">{{ h.kicker }}</p>
+              <p class="text-[15px] font-bold uppercase leading-snug text-ink">{{ h.title }}</p>
+              <p v-if="h.note" class="text-[15px] font-bold uppercase leading-snug text-ink">{{ h.note }}</p>
+
+              <span class="mt-2.5 inline-flex items-center gap-2 text-[13px] text-muted transition group-hover:text-brand">
+                Görüntüle
+                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white">
+                  <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 6 6 6-6 6" />
+                  </svg>
+                </span>
+              </span>
+            </div>
+          </NuxtLink>
+        </li>
+      </ul>
     </section>
 
     <!-- Trust strip -->
