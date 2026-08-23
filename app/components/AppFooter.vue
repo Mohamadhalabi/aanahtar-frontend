@@ -1,12 +1,24 @@
 <script setup lang="ts">
 const { data: categories } = await useCategories()
-const remotes = computed(() => categories.value.filter(c => /kumanda/i.test(c.name)).slice(0, 6))
+
+/**
+ * The tree's top level holds broad groups, so filtering it alone surfaced only
+ * three entries. Flattening first lets child categories — "Dolu Kumandalar",
+ * "Xhorse Kumandalar" and the rest — reach the list.
+ */
+function flatten(nodes: any[]): any[] {
+  return (nodes ?? []).flatMap(n => [n, ...flatten(n.children ?? [])])
+}
+
+const remotes = computed(() =>
+  flatten(categories.value).filter(c => /kumanda/i.test(c.name)).slice(0, 7),
+)
 </script>
 
 <template>
   <footer class="mt-16 bg-neutral-50">
     <div class="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 lg:grid-cols-[1fr_2fr]">
-      <div>
+      <div class="min-w-0">
         <NuxtImg src="/images/logo/aanahtar-logo.webp" alt="Anadolu Anahtar" width="340" height="80" class="h-20 w-auto" loading="lazy" />
 
         <div class="mt-6 flex items-center gap-3">
@@ -23,7 +35,10 @@ const remotes = computed(() => categories.value.filter(c => /kumanda/i.test(c.na
         <p class="mt-2 text-[13px] leading-relaxed text-neutral-600">
           Anadolu Anahtar, güvenilirlik, kalite, hızlı çözümler ve müşteri odaklı hizmet
           anlayışıyla öne çıkar. Sektördeki tecrübemiz ve yenilikçi yaklaşımımızla,
-          müşterilerimize en iyi ürün ve hizmetleri sunmayı taahhüt ediyoruz.
+          müşterilerimize en iyi ürün ve hizmetleri sunmayı taahhüt ediyoruz. Bizimle çalışmak,
+          sadece ihtiyaçlarınızı karşılamakla kalmaz, aynı zamanda işlerinizi daha güvenli ve
+          verimli hale getirir. Anadolu Anahtar’ı tercih ederek, işinizi güçlü bir ortakla bir
+          adım öne taşırsınız.
         </p>
 
         <div class="mt-5 flex gap-4 text-neutral-500">
@@ -42,17 +57,19 @@ const remotes = computed(() => categories.value.filter(c => /kumanda/i.test(c.na
         </div>
       </div>
 
-      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        <div>
+      <!-- Five columns at xl, three at lg: at 1200px five link columns leave
+           each one narrow enough that most labels wrap to two lines. -->
+      <div class="grid min-w-0 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div class="min-w-0">
           <h4 class="mb-3 font-semibold text-ink">Koşullar</h4>
           <ul class="space-y-2 text-[13px] text-neutral-600">
-            <li><NuxtLink to="/gizlilik-politikasi" class="hover:text-brand-500">Gizlilik Ve Güvenlik Politikası</NuxtLink></li>
+            <li><NuxtLink to="/gizlilik-ve-guvenlik-politikasi" class="hover:text-brand-500">Gizlilik Ve Güvenlik Politikası</NuxtLink></li>
             <li><NuxtLink to="/teslimat-ve-iade" class="hover:text-brand-500">Teslimat ve İade</NuxtLink></li>
             <li><NuxtLink to="/mesafeli-satis-sozlesmesi" class="hover:text-brand-500">Mesafeli Satış Sözleşmesi</NuxtLink></li>
           </ul>
         </div>
 
-        <div>
+        <div class="min-w-0">
           <h4 class="mb-3 font-semibold text-ink">Kumandalar</h4>
           <ul class="space-y-2 text-[13px] text-neutral-600">
             <li v-for="c in remotes" :key="c.id">
@@ -61,7 +78,7 @@ const remotes = computed(() => categories.value.filter(c => /kumanda/i.test(c.na
           </ul>
         </div>
 
-        <div>
+        <div class="min-w-0">
           <h4 class="mb-3 font-semibold text-ink">Anadolu Anahtar</h4>
           <ul class="space-y-2 text-[13px] text-neutral-600">
             <li><NuxtLink to="/" class="hover:text-brand-500">Anasayfa</NuxtLink></li>
@@ -72,7 +89,17 @@ const remotes = computed(() => categories.value.filter(c => /kumanda/i.test(c.na
           </ul>
         </div>
 
-        <div>
+        <!-- Prose rather than links, so it reads as a column of text and not a
+             list with dead entries. -->
+        <div class="min-w-0">
+          <h4 class="mb-3 font-semibold text-ink">Şirketimizin Kuruluşu</h4>
+          <p class="text-[13px] leading-relaxed text-neutral-600">
+            2018 yılında Mersin’de kurulan Anadolu Anahtar, kısa sürede otomotiv ve anahtarcılık
+            sektörlerinde güvenilir bir marka haline geldi.
+          </p>
+        </div>
+
+        <div class="min-w-0">
           <h4 class="mb-3 font-semibold text-ink">Hesabım</h4>
           <ul class="space-y-2 text-[13px] text-neutral-600">
             <li><NuxtLink to="/siparis-takip" class="hover:text-brand-500">Siparişinizi Takip Edin</NuxtLink></li>

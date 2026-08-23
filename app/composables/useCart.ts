@@ -32,10 +32,12 @@ export function useCart() {
     path: '/',
   })
 
-  // Written by useAuth on login. Cart requests need it too: the cart endpoints
+  // Shared state, not a fresh useCookie: constructing one here read the cookie
+  // before login's write had been flushed, so the load() straight after login
+  // went out unauthenticated and came back with the guest cart. Cart endpoints
   // carry no auth middleware, so without this header the backend sees a guest
   // and strips every price — even for a signed-in customer.
-  const auth = useCookie<string | null>('auth_token')
+  const auth = useAuthToken()
 
   const currency = useCurrencyCode()
 

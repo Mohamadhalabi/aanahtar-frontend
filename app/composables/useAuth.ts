@@ -13,23 +13,27 @@ export function useAuth() {
   const customer = useState<Customer | null>('customer', () => null)
   const isLoggedIn = computed(() => customer.value !== null)
 
-  // Readable by JS on purpose: useApiFetch has to attach it as a bearer header
-  // on the client, so httpOnly isn't an option here. See the trade-off note.
-  const token = useCookie<string | null>('auth_token', {
-    maxAge: 60 * 60 * 24 * 30,
-    sameSite: 'lax',
-    secure: !import.meta.dev,
-    path: '/',
-  })
+  // Shared state rather than a per-call useCookie: see useAuthToken for why.
+  // Readable by JS on purpose — useApiFetch attaches it as a bearer header on
+  // the client, so httpOnly isn't an option here.
+  const token = useAuthToken()
 
   function authHeaders(): Record<string, string> {
     return token.value ? { Authorization: `Bearer ${token.value}` } : {}
   }
 
   async function login(email: string, password: string) {
+    const cart = useCart()
+
+    // Sent so the backend can fold anything added as a guest into the
+    // customer's cart. Read before the token is set, since the server may
+    // reissue it.
+    const guestToken = cart.token.value
+
     const res = await $fetch<{ token: string; customer: Customer }>('/api/auth/login', {
       method: 'POST',
       body: { email, password },
+      headers: guestToken ? { 'X-Cart-Token': guestToken } : {},
     })
 
     // Was dropped on the floor before, which is why every authenticated call
@@ -37,11 +41,18 @@ export function useAuth() {
     token.value = res.token
     customer.value = res.customer
 
-    await useCart().load()      // pick up the merged cart
+    // The guest token is cleared first: with it still set the backend can
+    // resolve this browser's empty guest cart by token and answer with that
+    // instead of the customer's. The response supplies the right token back.
+    cart.token.value = null
+    await cart.load()
+
     await refreshNuxtData()     // re-fetch products, now with prices
   }
 
   async function logout() {
+    const cart = useCart()
+
     try {
       await $fetch('/api/auth/logout', { method: 'POST', headers: authHeaders() })
     } finally {
@@ -49,6 +60,13 @@ export function useAuth() {
       // otherwise leave the user stuck in a half-logged-in state.
       token.value = null
       customer.value = null
+
+      // The cart belongs to the account, not the browser. Leaving the token
+      // behind hands the next person at this machine the previous customer's
+      // basket.
+      cart.token.value = null
+      cart.cart.value = null
+
       await refreshNuxtData()
       await navigateTo('/')
     }
@@ -70,5 +88,5 @@ export function useAuth() {
     }
   }
 
-  return { customer, isLoggedIn, login, logout, fetchMe }
+  return { customer, isLoggedIn, token, authHeaders, login, logout, fetchMe }
 }
