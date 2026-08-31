@@ -104,7 +104,7 @@ async function addToCart() {
            moves up. The KDV note lives inside this block, so it disappears
            along with the price rather than dangling on its own. -->
       <div v-if="product.price_visible" class="mt-3">
-        <span class="text-[15px] font-bold text-price">{{ formatPrice(product.price) }}</span>
+        <span class="text-[19px] font-extrabold leading-tight text-price">{{ formatPrice(product.price) }}</span>
         <span class="ml-1 text-[11px] font-medium text-muted">+ KDV</span>
         <span v-if="product.old_price" class="ml-2 text-xs text-muted line-through">
           {{ formatPrice(product.old_price) }}

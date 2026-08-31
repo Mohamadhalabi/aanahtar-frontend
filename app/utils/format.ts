@@ -13,9 +13,12 @@ export function formatPrice(amount: number | string | null | undefined): string 
 
   const { current } = useCurrency()
 
+  // Whole units only. The API already rounds prices up to an integer, so the
+  // decimals were always ",00" — minimumFractionDigits has to be 0 as well,
+  // since setting only the maximum still pads out to two places.
   const formatted = new Intl.NumberFormat('tr-TR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(value)
 
   return `${current.value.symbol}${formatted}`
