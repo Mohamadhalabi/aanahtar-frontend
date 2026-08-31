@@ -31,8 +31,11 @@ async function addToCart() {
 
 <template>
   <!-- min-w-0: as a grid item this defaults to min-width:auto, which lets the
-       contents force the whole track — and the page — wider than the viewport. -->
-  <div class="group relative flex min-w-0 flex-col rounded-lg border border-line bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,.09)] transition duration-200 hover:z-10 hover:border-brand/20 hover:shadow-[0_10px_32px_rgba(0,0,0,.18)] sm:p-4">
+       contents force the whole track — and the page — wider than the viewport.
+       The hover lift uses transform (scale + translate) rather than width or
+       padding, so nothing around it reflows; hover:z-10 keeps the grown card
+       above its neighbours. -->
+  <div class="group relative flex min-w-0 transform-gpu flex-col rounded-lg border border-line bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,.09)] transition-all duration-200 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.03] hover:border-brand/20 hover:shadow-[0_14px_38px_rgba(0,0,0,.20)] motion-reduce:transform-none motion-reduce:hover:transform-none sm:p-4">
     <NuxtLink :to="`/urun/${product.slug}/`" class="block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
       <p class="mb-1.5 truncate text-[11px] text-muted">{{ product.category }}</p>
 
@@ -55,7 +58,7 @@ async function addToCart() {
           sizes="sm:50vw md:33vw lg:25vw"
           loading="lazy"
           draggable="false"
-          class="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          class="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.12] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           :class="!product.in_stock && 'opacity-60'"
         />
         <div v-else class="h-full w-full rounded bg-neutral-50" />
@@ -97,9 +100,12 @@ async function addToCart() {
     <!-- mt-auto: pushes price and controls to the bottom edge, so they line up
          across a row even when one card's title runs shorter. -->
     <div class="mt-auto">
-      <!-- Hidden entirely for guests: no placeholder, so the row below just moves up. -->
+      <!-- Hidden entirely for guests: no placeholder, so the row below just
+           moves up. The KDV note lives inside this block, so it disappears
+           along with the price rather than dangling on its own. -->
       <div v-if="product.price_visible" class="mt-3">
         <span class="text-[15px] font-bold text-price">{{ formatPrice(product.price) }}</span>
+        <span class="ml-1 text-[11px] font-medium text-muted">+ KDV</span>
         <span v-if="product.old_price" class="ml-2 text-xs text-muted line-through">
           {{ formatPrice(product.old_price) }}
         </span>
