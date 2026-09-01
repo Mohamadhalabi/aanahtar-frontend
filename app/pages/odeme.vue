@@ -27,11 +27,15 @@ const total = computed(() => discounted.value + tax.value + shipping.value)
 const form = reactive({
   first_name: '', last_name: '', email: '', phone: '',
   address: '', postcode: '', state: '', city: '',
-  // Card is not wired up yet, so there's only one option and it's fixed here.
   payment_method: 'havale',
+  // Tells the backend this payment started in a browser, so iyzico's callback
+  // redirects here rather than to the API host the mobile app watches for.
+  channel: 'web',
   notes: '',
   terms: false,
 })
+
+const isCard = computed(() => form.payment_method === 'card')
 
 const ready = ref(false)
 
@@ -132,12 +136,15 @@ async function submit() {
       headers: authHeader(),
     })
 
-    await load()   // the cart is empty now
-
+    // Card orders keep their cart until the money actually lands, so there's
+    // nothing to reload here — go straight to iyzico's hosted page. The return
+    // page reloads the cart once the callback has emptied it.
     if (res.redirect_url) {
       window.location.href = res.redirect_url
       return
     }
+
+    await load()   // havale: the cart is empty now
 
     await navigateTo(`/my-account/siparisler/${res.order_number}`)
   } catch (e: any) {
@@ -145,7 +152,9 @@ async function submit() {
     error.value = e?.data?.message ?? 'Sipariş oluşturulamadı.'
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } finally {
-    busy.value = false
+    // Left busy on a card redirect: the browser is already navigating away and
+    // re-enabling the button invites a second order.
+    if (!isCard.value) busy.value = false
   }
 }
 
@@ -358,14 +367,34 @@ useSeoMeta({ title: 'Ödeme' })
             </dl>
           </div>
 
-          <!-- Card payment is not live yet. Rather than showing it disabled and
-               inviting "why can't I click this", there's one method and it's
-               stated plainly. -->
-          <div class="mt-5 rounded-lg border border-line px-4 py-3">
-            <p class="text-sm font-medium text-ink">Banka Havalesi / EFT</p>
-            <p class="mt-1 text-xs leading-relaxed text-muted">
-              Sipariş onayından sonra hesap bilgileri tarafınıza iletilecektir.
-            </p>
+          <!-- Payment method. The card option hands off to iyzico's hosted
+               page, so no card details are entered on this site. -->
+          <div class="mt-5 divide-y divide-line rounded-lg border border-line">
+            <label class="flex cursor-pointer items-start gap-3 px-4 py-3">
+              <input
+                v-model="form.payment_method" type="radio" value="havale"
+                class="mt-1 accent-[var(--color-brand,#2183B0)]"
+              >
+              <span>
+                <span class="block text-sm font-medium text-ink">Banka Havalesi / EFT</span>
+                <span class="mt-1 block text-xs leading-relaxed text-muted">
+                  Sipariş onayından sonra hesap bilgileri tarafınıza iletilecektir.
+                </span>
+              </span>
+            </label>
+
+            <label class="flex cursor-pointer items-start gap-3 px-4 py-3">
+              <input
+                v-model="form.payment_method" type="radio" value="card"
+                class="mt-1 accent-[var(--color-brand,#2183B0)]"
+              >
+              <span>
+                <span class="block text-sm font-medium text-ink">Kredi / Banka Kartı</span>
+                <span class="mt-1 block text-xs leading-relaxed text-muted">
+                  Güvenli ödeme sayfasına yönlendirileceksiniz. Kart bilgileriniz sitemizde saklanmaz.
+                </span>
+              </span>
+            </label>
           </div>
 
           <label class="mt-5 flex cursor-pointer items-start gap-2.5 text-[13px] leading-relaxed text-muted">
@@ -383,7 +412,12 @@ useSeoMeta({ title: 'Ödeme' })
             :disabled="busy || !form.terms"
             @click="submit"
           >
-            {{ busy ? 'Gönderiliyor…' : 'Siparişi onayla' }}
+            <template v-if="busy">
+              {{ isCard ? 'Ödeme sayfasına yönlendiriliyorsunuz…' : 'Gönderiliyor…' }}
+            </template>
+            <template v-else>
+              {{ isCard ? 'Ödemeye geç' : 'Siparişi onayla' }}
+            </template>
           </button>
         </div>
       </aside>
