@@ -5,6 +5,33 @@ const { code, list, current, load, setCurrency } = useCurrency()
 // every price renders with the fallback for a frame.
 await load()
 
+/**
+ * Session. `customer` is only populated by fetchMe(), so without this call the
+ * bar renders as a guest on every fresh page load even with a valid token.
+ * It returns immediately when there's no token, so guests pay nothing.
+ *
+ * If a plugin already calls fetchMe() on app init, delete the await below —
+ * `customer` is useState, so the state is shared and the call is redundant.
+ */
+const { customer, isLoggedIn, fetchMe } = useAuth()
+
+await fetchMe()
+
+/**
+ * First name only. Full names run long enough to wrap the top bar on mobile,
+ * and the email local-part is a reasonable last resort for accounts registered
+ * without a name rather than showing a bare "Hoş geldiniz,".
+ */
+const displayName = computed(() => {
+  const c = customer.value
+  if (!c) return ''
+
+  const name = (c.first_name ?? c.name ?? '').trim()
+  if (name) return name.split(/\s+/)[0]
+
+  return c.email.split('@')[0]
+})
+
 const switching = ref(false)
 
 async function onChange(event: Event) {
@@ -55,7 +82,24 @@ async function onChange(event: Event) {
           <span class="hidden sm:inline">Siparişinizi Takip Edin</span>
         </NuxtLink>
         <span class="mx-4 h-4 w-px bg-line" />
-        <NuxtLink to="/my-account/" class="flex items-center gap-1.5 hover:text-brand">
+
+        <!-- Both states point at /my-account/: logged in it's the account
+             dashboard, logged out it's the login form. -->
+        <NuxtLink
+          v-if="isLoggedIn"
+          to="/my-account/"
+          class="flex min-w-0 items-center gap-1.5 hover:text-brand"
+        >
+          <svg class="h-4 w-4 shrink-0 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5" />
+          </svg>
+          <span class="min-w-0 truncate">
+            <span class="hidden sm:inline">Hoş geldiniz, </span>
+            <span class="font-medium">{{ displayName }}</span>
+          </span>
+        </NuxtLink>
+
+        <NuxtLink v-else to="/my-account/" class="flex items-center gap-1.5 hover:text-brand">
           <svg class="h-4 w-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5" />
           </svg>

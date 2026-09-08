@@ -34,6 +34,12 @@ const active = ref(-1)
 // the backend sees a guest and strips the prices.
 const auth = useCookie<string | null>('auth_token')
 
+// This is raw $fetch, not useApiFetch, so nothing attaches X-Currency for us.
+// Without it Currencies::current() falls back to the base currency and the
+// dropdown showed unconverted USD figures under whatever symbol was selected
+// — ₺3 and €3 for the same product.
+const currency = useCurrencyCode()
+
 let timer: ReturnType<typeof setTimeout> | undefined
 let seq = 0
 
@@ -44,7 +50,10 @@ async function fetchSuggestions(term: string) {
   try {
     const res = await $fetch<any>('/api/search/suggest', {
       params: { q: term, ...(props.category ? { category: props.category } : {}) },
-      headers: auth.value ? { Authorization: `Bearer ${auth.value}` } : {},
+      headers: {
+        ...(auth.value ? { Authorization: `Bearer ${auth.value}` } : {}),
+        ...(currency.value ? { 'X-Currency': currency.value } : {}),
+      },
     })
 
     // Out-of-order responses would otherwise flicker older results back in.
@@ -88,6 +97,16 @@ watch([() => props.term, () => props.category, () => props.focused], ([term]) =>
     lastFetched = String(term)
     fetchSuggestions(String(term))
   }, 250)
+})
+
+// Cached results are priced in the old currency, so they're dropped rather
+// than left on screen with the new symbol — which is the same wrong-number
+// bug in a different guise. Clearing lastFetched lets the watcher above
+// re-query the term the visitor still has typed.
+watch(currency, () => {
+  items.value = []
+  total.value = 0
+  lastFetched = ''
 })
 
 let lastFetched = ''

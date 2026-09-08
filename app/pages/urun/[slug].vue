@@ -19,6 +19,14 @@ if (error.value) {
 const p = computed(() => product.value?.data)
 const images = computed<string[]>(() => p.value?.images ?? [])
 
+/**
+ * Prices are login-gated. The API decides and reports it as `can_see_price`,
+ * so SSR and the client agree — deriving this from useAuth() here would render
+ * the guest markup on the server and then flash the price in after hydration.
+ * Adding to cart is NOT gated: guests fill a cart and log in at checkout.
+ */
+const canSeePrice = computed(() => p.value?.can_see_price ?? p.value?.price != null)
+
 /* --- Gallery ---------------------------------------------------------- */
 
 const imageIndex = ref(0)
@@ -97,6 +105,9 @@ const openFaq = ref<number | null>(0)
 const siteUrl = useRuntimeConfig().public.siteUrl
 const canonical = computed(() => `${siteUrl}/urun/${slug}/`)
 
+// Guests go to the account page, which is also the login form.
+const loginTo = '/my-account/'
+
 useSeoMeta({
   title: () => p.value?.seo?.title,
   description: () => p.value?.seo?.description,
@@ -119,15 +130,22 @@ useHead(() => {
     image: images.value.length ? images.value : undefined,
     description: v.seo?.description || undefined,
     brand: v.brands?.[0]?.name ? { '@type': 'Brand', name: v.brands[0].name } : undefined,
-    offers: {
-      '@type': 'Offer',
-      url: canonical.value,
-      priceCurrency: v.currency || 'TRY',
-      price: String(v.price ?? ''),
-      availability: v.in_stock
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock',
-    },
+    // Googlebot crawls as a guest, so it never gets a price. An Offer with an
+    // empty price is worse than no Offer — Search Console reads it as invalid.
+    // The trade-off of login-gated pricing is no price snippet in results.
+    offers: canSeePrice.value
+      ? {
+          '@type': 'Offer',
+          url: canonical.value,
+          // meta() is an object — `v.currency` alone emits the whole
+          // {code, symbol, rate} blob as priceCurrency, which is invalid.
+          priceCurrency: v.currency?.code || 'TRY',
+          price: String(v.price ?? ''),
+          availability: v.in_stock
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+        }
+      : undefined,
   }]
 
   if (v.faq?.length) {
@@ -238,8 +256,10 @@ useHead(() => {
       <!-- Gallery -->
       <div class="min-w-0">
         <div class="relative">
+          <!-- Gated with the price: the percentage is derived from it, and
+               without a price it would render NaN anyway. -->
           <span
-            v-if="p.old_price"
+            v-if="canSeePrice && p.old_price"
             class="absolute left-0 top-0 z-10 rounded bg-price px-2 py-1 text-xs font-bold text-white"
           >
             −%{{ Math.round((1 - p.price / p.old_price) * 100) }}
@@ -310,7 +330,8 @@ useHead(() => {
 
         <p v-if="p.sku" class="mt-5 text-sm text-ink">SKU: {{ p.sku }}</p>
 
-        <div class="mt-3 flex flex-wrap items-baseline gap-3">
+        <!-- Price, logged in -->
+        <div v-if="canSeePrice" class="mt-3 flex flex-wrap items-baseline gap-3">
           <span class="text-[2rem] font-semibold leading-none text-brand">{{ formatPrice(p.price) }}</span>
           <span v-if="p.old_price" class="text-base text-muted line-through">
             {{ formatPrice(p.old_price) }}
@@ -318,10 +339,27 @@ useHead(() => {
           <span v-if="PRICES_EXCLUDE_VAT" class="text-2xl font-light text-brand">+ KDV</span>
         </div>
 
+        <!-- Price, guest. Occupies the same slot so the buy box doesn't jump. -->
+        <div v-else class="mt-3">
+          <NuxtLink
+            :to="loginTo"
+            class="inline-flex items-center gap-2 text-[15px] font-medium text-brand transition hover:text-brand-600"
+          >
+            <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+            Fiyatı görmek için giriş yapın
+          </NuxtLink>
+          <p class="mt-1.5 text-[13px] text-muted">
+            Ürünü şimdi sepete ekleyebilir, fiyatları giriş yaptıktan sonra görebilirsiniz.
+          </p>
+        </div>
+
         <p v-if="p.preorder_release_date" class="mt-3 text-sm text-muted">
           Tahmini teslim: {{ formatOrderDate(p.preorder_release_date) }}
         </p>
 
+        <!-- Not gated: guests build a cart and log in at checkout. -->
         <div class="mt-6 flex flex-wrap items-center gap-4">
           <div class="flex h-12 items-center rounded-full border border-line px-2">
             <button
