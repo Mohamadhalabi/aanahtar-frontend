@@ -226,16 +226,21 @@ useSeoMeta({
           : data.promos.length === 3 ? 'sm:grid-cols-2 lg:grid-cols-3'
           : 'sm:grid-cols-2 lg:grid-cols-4'"
       >
-        <component
-          v-for="(p, i) in data.promos" :key="i"
-          :is="p.link ? 'NuxtLink' : 'div'"
-          :to="p.link ?? undefined"
-          class="overflow-hidden rounded-lg transition hover:shadow-[0_6px_22px_rgba(0,0,0,.10)]"
-        >
-          <!-- h-auto, no object-cover: the banner keeps its own aspect ratio
-               and nothing gets clipped, whatever shape the upload is. -->
-          <NuxtImg :src="p.image" :alt="p.alt ?? ''" sizes="100vw sm:50vw" loading="lazy" class="h-auto w-full" />
-        </component>
+        <template v-for="(p, i) in data.promos" :key="i">
+          <NuxtLink
+            v-if="p.link"
+            :to="p.link"
+            class="block overflow-hidden rounded-lg transition hover:shadow-[0_6px_22px_rgba(0,0,0,.10)]"
+          >
+            <!-- h-auto, no object-cover: the banner keeps its own aspect ratio
+                and nothing gets clipped, whatever shape the upload is. -->
+            <NuxtImg :src="p.image" :alt="p.alt ?? ''" sizes="100vw sm:50vw" loading="lazy" class="h-auto w-full" />
+          </NuxtLink>
+
+          <div v-else class="overflow-hidden rounded-lg">
+            <NuxtImg :src="p.image" :alt="p.alt ?? ''" sizes="100vw sm:50vw" loading="lazy" class="h-auto w-full" />
+          </div>
+        </template>
       </div>
     </section>
 

@@ -1,10 +1,18 @@
 export function useApiFetch<T>(url: string | (() => string), opts: any = {}) {
-  const config = useRuntimeConfig()
   const token = useCookie<string | null>('auth_token')
   const currency = useCurrencyCode()
 
   return useFetch<T>(url, {
-    baseURL: import.meta.server ? `${config.backendOrigin}/api` : '/api',
+    // Always relative, on both server and client.
+    //
+    // This used to point straight at Laravel during SSR. That bypassed
+    // server/api/[...path].ts, which is what attaches X-Client-Key — so every
+    // server-rendered fetch came back 401 and the page rendered empty. useFetch
+    // doesn't retry a resolved SSR call, so it never recovered on the client.
+    //
+    // Relative means Nitro resolves it against itself and the handler runs in
+    // both cases. One code path, key attached either way.
+    baseURL: '/api',
     credentials: 'include',
     ...opts,
     headers: { ...(opts.headers ?? {}) },

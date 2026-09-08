@@ -119,45 +119,148 @@ select:-webkit-autofill {
   @tailwindcss/typography — not installed here. :deep is required to reach
   v-html output, since scoped styles don't apply to runtime-injected markup.
 */
+/*
+  Product description body — WYSIWYG HTML from the import, so the styling has
+  to cope with whatever tags come through rather than a known set.
 
+  This is a global stylesheet, so selectors are written plainly. `:deep()` is a
+  Vue SFC feature — in a .css file the browser doesn't parse it and drops the
+  whole rule. Everything here is prefixed with .product-content, so global is
+  safe.
+*/
 .product-content {
-  margin-inline: auto;
+  --pc-gap: 1.5rem;
+  --pc-gap-lg: 1.5rem;
+
   font-size: 0.9375rem;
   line-height: 1.8;
   color: var(--color-muted, #4b5563);
+  /* Long part numbers ("HU83-433MHz-ID49") have no break opportunities and
+     will push the column wide on a phone. */
+  overflow-wrap: break-word;
 }
 
-.product-content :deep(p) {
-  margin-bottom: 1rem;
+/* The container owns its padding, so a leading heading or trailing paragraph
+   shouldn't add to it. */
+.product-content > *:first-child { margin-top: 0; }
+.product-content > *:last-child  { margin-bottom: 0; }
+
+/* ---------------------------------------------------------------
+   Text
+   --------------------------------------------------------------- */
+
+.product-content p {
+  margin: 0 0 var(--pc-gap);
+  line-height: 1.8;
 }
 
-.product-content :deep(p:last-child) {
-  margin-bottom: 0;
-}
-
-.product-content :deep(strong),
-.product-content :deep(b) {
+.product-content strong,
+.product-content b {
   color: var(--color-ink, #111827);
   font-weight: 600;
 }
 
-/*
-  The import left section headings as ordinary paragraphs containing nothing
-  but bold text — "Ürün Özellikleri:", "Kullanım Alanları:". Promoting them
-  visually is what breaks the wall of text into sections.
-*/
-.product-content :deep(p:has(> strong:only-child)) {
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
-  font-size: 1.0625rem;
-  line-height: 1.4;
+.product-content em,
+.product-content i { font-style: italic; }
+
+.product-content mark {
+  background: var(--color-warning-50, #fef9c3);
+  color: var(--color-ink, #111827);
+  padding: 0.1em 0.25em;
+  border-radius: 0.25rem;
 }
 
-.product-content :deep(p:has(> strong:only-child) strong) {
+.product-content small {
+  font-size: 0.8125rem;
+  color: var(--color-muted, #6b7280);
+}
+
+.product-content sub,
+.product-content sup {
+  font-size: 0.72em;
+  line-height: 0;
+  position: relative;
+}
+.product-content sup { top: -0.45em; }
+.product-content sub { bottom: -0.2em; }
+
+.product-content del { text-decoration: line-through; opacity: 0.7; }
+.product-content ins { text-decoration: none; background: var(--color-success-50, #dcfce7); }
+
+.product-content abbr[title] {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+}
+
+.product-content kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125em;
+  padding: 0.15em 0.4em;
+  border: 1px solid var(--color-line, #e5e7eb);
+  border-bottom-width: 2px;
+  border-radius: 0.3rem;
+  background: var(--color-neutral-50, #f9fafb);
+  color: var(--color-ink, #111827);
+}
+
+/* ---------------------------------------------------------------
+   Headings
+   --------------------------------------------------------------- */
+
+/*
+  Kept close to body size. The reference storefront uses plain labels rather
+  than large headings, and oversized headings in a description tab compete
+  with the product title above it.
+*/
+.product-content h2,
+.product-content h3,
+.product-content h4,
+.product-content h5,
+.product-content h6 {
+  margin: var(--pc-gap-lg) 0 0.5rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-ink, #111827);
+  scroll-margin-top: 6rem;
+}
+
+.product-content h2 { font-size: 1.0625rem; }
+.product-content h3 { font-size: 1rem; }
+.product-content h4,
+.product-content h5,
+.product-content h6 { font-size: 0.9375rem; }
+
+/* A heading directly after a heading is a subtitle, not a new section. */
+.product-content h2 + h3,
+.product-content h3 + h4 { margin-top: 0.5rem; }
+
+/*
+  Section labels the import left as bold-only paragraphs — "Ürün Özellikleri:",
+  "Kullanım Alanları:". They introduce the block below them, so the gap under
+  is small and the gap above is what separates the sections.
+*/
+.product-content p:has(> strong:only-child) {
+  margin-top: var(--pc-gap-lg);
+  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-ink, #111827);
+}
+
+.product-content p:has(> strong:only-child) strong {
   font-weight: 600;
 }
 
-.product-content :deep(p:first-child:has(> strong:only-child)) {
+.product-content p:first-child:has(> strong:only-child) {
+  margin-top: 0;
+}
+
+/*
+  A label followed immediately by its explanatory paragraph, as in
+  "Kullanım Alanları:" above its description — they belong together.
+*/
+.product-content p:has(> strong:only-child) + p {
   margin-top: 0;
 }
 
@@ -165,90 +268,290 @@ select:-webkit-autofill {
   Label-value lines — "Model: NCF29AxM", "Frekans: 433 MHz". They read as a
   list, so they sit tighter together than prose paragraphs.
 */
-.product-content :deep(p:has(> strong:first-child):not(:has(> strong:only-child))) {
-  margin-bottom: 0.35rem;
+.product-content p:has(> strong:first-child):not(:has(> strong:only-child)) {
+  margin-bottom: 0.3rem;
+  line-height: 1.7;
 }
 
-.product-content :deep(h2),
-.product-content :deep(h3),
-.product-content :deep(h4) {
-  margin: 2rem 0 0.75rem;
+/* ---------------------------------------------------------------
+   Lists
+   --------------------------------------------------------------- */
+
+/*
+  list-style-type as a longhand, plus an explicit display on the item:
+  Tailwind's preflight resets lists to `list-style: none`, and this is what
+  reliably wins it back.
+*/
+.product-content ul,
+.product-content ol {
+  margin: 0 0 var(--pc-gap);
+  padding-left: 1.5rem;
+  list-style-position: outside;
+}
+
+.product-content ul { list-style-type: disc; }
+.product-content ol { list-style-type: decimal; }
+
+.product-content li {
+  display: list-item;
+  margin-bottom: 0.6rem;
+  padding-left: 0.25rem;
+  line-height: 1.8;
+}
+
+.product-content li:last-child { margin-bottom: 0; }
+
+/* Neutral markers, matching the reference. */
+.product-content li::marker {
+  color: var(--color-muted, #6b7280);
+}
+
+/* Nested lists sit inside their parent item, not as a separate block. */
+.product-content li > ul,
+.product-content li > ol { margin: 0.6rem 0 0; }
+
+.product-content li > ul { list-style-type: circle; }
+.product-content li li > ul { list-style-type: square; }
+
+/*
+  This import wraps every list item's text in its own <p>. Left alone that
+  paragraph's block margin turns a tight list into a stack of loose lines.
+*/
+.product-content li > p { margin-bottom: 0.6rem; }
+.product-content li > p:only-child,
+.product-content li > p:last-child { margin-bottom: 0; }
+
+/* Definition lists — some imports use these for spec tables. */
+.product-content dl { margin: 0 0 var(--pc-gap); }
+
+.product-content dt {
   font-weight: 600;
-  line-height: 1.4;
   color: var(--color-ink, #111827);
+  margin-top: 0.75rem;
 }
 
-.product-content :deep(h2) { font-size: 1.25rem; }
-.product-content :deep(h3) { font-size: 1.0625rem; }
-.product-content :deep(h4) { font-size: 1rem; }
+.product-content dt:first-child { margin-top: 0; }
 
-.product-content :deep(ul),
-.product-content :deep(ol) {
-  margin: 0 0 1.25rem 0;
-  padding-left: 1.25rem;
+.product-content dd {
+  margin: 0.15rem 0 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--color-line, #e5e7eb);
+  line-height: 1.8;
 }
 
-.product-content :deep(ul) { list-style: disc; }
-.product-content :deep(ol) { list-style: decimal; }
+/* ---------------------------------------------------------------
+   Media
+   --------------------------------------------------------------- */
 
-.product-content :deep(li) {
-  margin-bottom: 0.45rem;
-  padding-left: 0.35rem;
-}
-
-.product-content :deep(li::marker) {
-  color: var(--color-brand, #2563eb);
-}
-
-/* Content images are photos, not decoration — give them room and a frame so
-   they don't collide with the text above and below. */
-.product-content :deep(img) {
+/*
+  Responsive at every size. height:auto stops a width-constrained image from
+  squashing; no border or frame, matching the reference storefront.
+*/
+.product-content img {
   display: block;
   max-width: 100%;
   height: auto;
-  margin: 1.75rem auto;
-  border: 1px solid var(--color-line, #e5e7eb);
-  border-radius: 0.75rem;
+  margin: var(--pc-gap) auto;
+  border-radius: 0.5rem;
 }
 
-.product-content :deep(a) {
-  color: var(--color-brand, #2563eb);
-  text-underline-offset: 2px;
+/* An image inside a sentence is an icon or a badge — leave it inline. */
+.product-content p > img:not(:only-child) {
+  display: inline-block;
+  margin: 0 0.25rem;
+  vertical-align: middle;
+  border-radius: 0.25rem;
 }
 
-.product-content :deep(a:hover) {
-  text-decoration: underline;
+.product-content a:has(> img) {
+  display: block;
+  text-decoration: none;
 }
 
-.product-content :deep(blockquote) {
-  margin: 1.5rem 0;
-  padding-left: 1rem;
-  border-left: 3px solid var(--color-line, #e5e7eb);
-  font-style: italic;
+.product-content figure { margin: var(--pc-gap) 0; }
+
+.product-content figure img { margin-block: 0; }
+
+.product-content figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--color-muted, #6b7280);
 }
 
-.product-content :deep(table) {
+/*
+  Embedded video — YouTube iframes arrive with fixed width/height attributes
+  that overflow on a phone. aspect-ratio overrides them without the old
+  padding-top wrapper hack.
+*/
+.product-content iframe,
+.product-content video {
+  display: block;
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  margin: var(--pc-gap) auto;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #000;
 }
 
-.product-content :deep(th),
-.product-content :deep(td) {
+/* ---------------------------------------------------------------
+   Tables
+   --------------------------------------------------------------- */
+
+/*
+  Spec tables are wider than a phone and the HTML comes from v-html, so there
+  is no wrapper element to scroll. Making the table itself a scroll container
+  is the only CSS-only option.
+*/
+.product-content table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 0 0 var(--pc-gap);
+  font-size: 0.875rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.product-content th,
+.product-content td {
   border: 1px solid var(--color-line, #e5e7eb);
-  padding: 0.6rem 0.9rem;
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.product-content th {
+  background: var(--color-neutral-50, #f9fafb);
+  font-weight: 600;
+  color: var(--color-ink, #111827);
+  white-space: nowrap;
+}
+
+.product-content tbody tr:nth-child(even) {
+  background: var(--color-neutral-50, #f9fafb);
+}
+
+.product-content caption {
+  caption-side: bottom;
+  padding-top: 0.6rem;
+  font-size: 0.8125rem;
+  color: var(--color-muted, #6b7280);
   text-align: left;
 }
 
-.product-content :deep(th) {
-  background: var(--color-neutral-50, #f9fafb);
-  font-weight: 500;
+/* ---------------------------------------------------------------
+   Links, quotes, code, rules
+   --------------------------------------------------------------- */
+
+.product-content a {
+  color: var(--color-brand, #2563eb);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+.product-content a:hover {
+  text-decoration: underline;
+}
+
+.product-content a:focus-visible {
+  outline: 2px solid var(--color-brand, #2563eb);
+  outline-offset: 2px;
+  border-radius: 0.2rem;
+}
+
+.product-content blockquote {
+  margin: var(--pc-gap) 0;
+  padding: 0.25rem 0 0.25rem 1.1rem;
+  border-left: 3px solid var(--color-line, #e5e7eb);
+  color: var(--color-ink, #111827);
+  font-style: italic;
+  line-height: 1.8;
+}
+
+.product-content blockquote p:last-child { margin-bottom: 0; }
+
+.product-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  padding: 0.15em 0.4em;
+  border-radius: 0.3rem;
+  background: var(--color-neutral-100, #f3f4f6);
   color: var(--color-ink, #111827);
 }
 
-.product-content :deep(hr) {
-  margin: 2rem 0;
+.product-content pre {
+  margin: 0 0 var(--pc-gap);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: var(--color-neutral-100, #f3f4f6);
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.product-content pre code {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.product-content hr {
+  margin: var(--pc-gap-lg) 0;
   border: 0;
   border-top: 1px solid var(--color-line, #e5e7eb);
+}
+
+/* Collapsible sections — used for long compatibility lists. */
+.product-content details {
+  margin: 0 0 var(--pc-gap);
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-line, #e5e7eb);
+  border-radius: 0.5rem;
+}
+
+.product-content summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-ink, #111827);
+}
+
+.product-content details[open] summary { margin-bottom: 0.75rem; }
+
+/* ---------------------------------------------------------------
+   Small screens
+   --------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .product-content {
+    --pc-gap: 1.25rem;
+    --pc-gap-lg: 1.5rem;
+    line-height: 1.75;
+  }
+
+  .product-content p,
+  .product-content li { line-height: 1.75; }
+
+  .product-content img,
+  .product-content iframe,
+  .product-content video {
+    border-radius: 0.375rem;
+  }
+
+  .product-content th,
+  .product-content td {
+    padding: 0.5rem 0.7rem;
+  }
+
+  .product-content ul,
+  .product-content ol {
+    padding-left: 1.25rem;
+  }
 }

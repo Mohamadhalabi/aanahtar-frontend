@@ -2,16 +2,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 const BACKEND = process.env.BACKEND_ORIGIN ?? 'http://127.0.0.1:8000'
 
-/**
- * Staging switch. Set NOINDEX=1 in the PM2 env on the test subdomain only.
- *
- * Gated on an env var rather than hardcoded, because a `noindex` header left
- * behind on the real storefront would drop it out of Google entirely — and
- * that's exactly the kind of line that survives a copy-paste to production.
- * Absent the flag, nothing is added.
- */
-const NOINDEX = process.env.NOINDEX === '1'
-
 export default defineNuxtConfig({
   compatibilityDate: '2026-08-11',
   modules: ['@nuxt/image', '@pinia/nuxt'],
@@ -19,33 +9,33 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss()] },
 
   runtimeConfig: {
-    // Server-side only. The composable appends /api itself, so no env var
-    // can strip it — that's what broke SSR before.
+    // Server-only: never appears in the client bundle. Read by
+    // server/api/[...path].ts and attached to every upstream request.
+    clientKey: process.env.CLIENT_KEY_WEB,
     backendOrigin: BACKEND,
     public: {
       siteUrl: 'http://localhost:3000',
-      // Read by server/routes/robots.txt.ts, which can't see build-time
-      // constants.
-      noindex: NOINDEX,
     },
   },
+
   router: {
     options: { strict: false },
   },
-  routeRules: {
-    // Declared first so the per-path rules below can still add their own
-    // headers; Nitro merges rather than replaces.
-    ...(NOINDEX
-      ? { '/**': { headers: { 'x-robots-tag': 'noindex, nofollow, noarchive' } } }
-      : {}),
 
-    // Same-origin proxy → no CORS, cart cookie just works.
-    '/api/**':    { proxy: `${BACKEND}/api/**` },
+  routeRules: {
+    // NOTE: no '/api/**' proxy rule here, deliberately.
+    //
+    // routeRules proxying runs in Nitro BEFORE route handlers, so a rule here
+    // would forward requests straight to Laravel and server/api/[...path].ts
+    // would never execute — meaning no X-Client-Key, and a 401 on everything.
+    // The handler does the proxying instead, and it's still same-origin, so
+    // the no-CORS property is unchanged.
+
     '/images/**': { proxy: `${BACKEND}/images/**`, headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
 
     // Never cache anything user-specific.
-    '/sepet':      { headers: { 'cache-control': 'no-store' } },
-    '/odeme/**':   { ssr: true, headers: { 'cache-control': 'no-store' } },
+    '/sepet':    { headers: { 'cache-control': 'no-store' } },
+    '/odeme/**': { ssr: true, headers: { 'cache-control': 'no-store' } },
   },
 
   nitro: {
