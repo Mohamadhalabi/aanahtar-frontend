@@ -1,11 +1,14 @@
 export default defineEventHandler(async (event) => {
-  const token = getCookie(event, 'auth_token')
   const config = useRuntimeConfig()
+  const token = getCookie(event, 'auth_token')
 
   if (token) {
-    await $fetch(`${config.backendOrigin}/api/logout`, {
+    await $fetch(`${config.backendOrigin}/api/auth/logout`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        'X-Client-Key': config.clientKey as string,
+        Authorization: `Bearer ${token}`,
+      },
     }).catch(() => {})
   }
 

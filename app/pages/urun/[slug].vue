@@ -241,7 +241,7 @@ useHead(() => {
               <NuxtLink :to="`/urun/${s.slug}/`" class="group flex items-start gap-3 py-4">
                 <NuxtImg
                   v-if="s.thumb" :src="s.thumb" :alt="s.title"
-                  width="120" height="120" loading="lazy"
+                  width="125" height="125" loading="lazy"
                   class="h-14 w-14 shrink-0 object-contain"
                 />
                 <span class="text-[13px] leading-snug text-ink transition group-hover:text-brand">
@@ -278,7 +278,7 @@ useHead(() => {
             >
               <NuxtImg
                 :src="image" :alt="p.title"
-                width="600" height="600" sizes="100vw lg:440px"
+                width="1500" height="1500" sizes="100vw lg:440px"
                 class="mx-auto aspect-square w-full max-w-[440px] object-contain"
               />
             </button>
@@ -294,7 +294,7 @@ useHead(() => {
             :class="i === imageIndex ? 'border-brand' : 'border-transparent hover:border-line'"
             @click="imageIndex = i"
           >
-            <NuxtImg :src="img" :alt="p.title" width="160" height="160" loading="lazy"
+            <NuxtImg :src="img" :alt="p.title" width="125" height="125" loading="lazy"
                      class="h-full w-full object-contain" />
           </button>
         </div>

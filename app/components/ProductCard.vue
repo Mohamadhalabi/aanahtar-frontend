@@ -54,7 +54,7 @@ async function addToCart() {
           v-if="product.thumb"
           :src="product.thumb"
           :alt="product.title"
-          width="300" height="300"
+          width="500" height="500"
           sizes="sm:50vw md:33vw lg:25vw"
           loading="lazy"
           draggable="false"

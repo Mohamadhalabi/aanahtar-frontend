@@ -91,7 +91,7 @@ function onEnter(which: 'desktop' | 'mobile') {
           src="/images/logo/aanahtar-logo.webp"
           alt="Anadolu Anahtar"
           width="266" height="62"
-          class="h-9 w-auto max-w-full sm:h-11 lg:h-[56px]"
+          class="h-12 w-auto max-w-full sm:h-14 lg:h-[72px]"
           preload
         />
       </NuxtLink>
