@@ -35,7 +35,7 @@ async function addToCart() {
        The hover lift uses transform (scale + translate) rather than width or
        padding, so nothing around it reflows; hover:z-10 keeps the grown card
        above its neighbours. -->
-  <div class="group relative flex min-w-0 transform-gpu flex-col rounded-lg border border-line bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,.09)] transition-all duration-200 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.03] hover:border-brand/20 hover:shadow-[0_14px_38px_rgba(0,0,0,.20)] motion-reduce:transform-none motion-reduce:hover:transform-none sm:p-4">
+  <div class="group relative flex min-w-0 transform-gpu flex-col rounded-lg border border-line bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,.08)] transition-all duration-200 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.025] hover:border-brand/20 hover:shadow-[0_12px_32px_rgba(0,0,0,.18)] motion-reduce:transform-none motion-reduce:hover:transform-none sm:p-4">
     <NuxtLink :to="`/urun/${product.slug}/`" class="block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
       <p class="mb-1.5 truncate text-[11px] text-muted">{{ product.category }}</p>
 
@@ -44,21 +44,23 @@ async function addToCart() {
            nothing to tell you the name continued. min-h keeps one- and
            two-line titles on the same baseline across a row. -->
       <h3
-        class="mb-3 line-clamp-2 min-h-[2.3rem] text-[13px] font-medium leading-[1.15rem] text-ink transition group-hover:text-brand [&_mark]:bg-brand/15 [&_mark]:font-semibold [&_mark]:text-brand"
+        class="mb-2.5 line-clamp-2 min-h-[2.3rem] text-[13px] font-medium leading-[1.15rem] text-ink transition group-hover:text-brand [&_mark]:bg-brand/15 [&_mark]:font-semibold [&_mark]:text-brand"
         :title="product.title"
         v-html="highlight(product.title, highlightTerm ?? '')"
       />
 
+      <!-- Square with a thin padding, so the photo sits just inside the card
+           edge instead of touching it. -->
       <div class="relative aspect-square overflow-hidden rounded">
         <NuxtImg
           v-if="product.thumb"
           :src="product.thumb"
           :alt="product.title"
           width="500" height="500"
-          sizes="sm:50vw md:33vw lg:25vw"
+          sizes="sm:50vw md:33vw lg:20vw"
           loading="lazy"
           draggable="false"
-          class="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.12] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          class="h-full w-full object-contain p-1 transition-transform duration-300 group-hover:scale-[1.08] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           :class="!product.in_stock && 'opacity-60'"
         />
         <div v-else class="h-full w-full rounded bg-neutral-50" />
@@ -79,7 +81,7 @@ async function addToCart() {
             v-for="b in product.badges" :key="b.key"
             class="rounded px-2 py-0.5 text-[10px] font-semibold text-white"
             :class="{
-              'bg-green-600': b.key === 'new',
+              'bg-red-600': b.key === 'new',
               'bg-brand': b.key === 'free_shipping',
               'bg-amber-500': b.key === 'preorder',
             }"
@@ -103,7 +105,7 @@ async function addToCart() {
       <!-- Hidden entirely for guests: no placeholder, so the row below just
            moves up. The KDV note lives inside this block, so it disappears
            along with the price rather than dangling on its own. -->
-      <div v-if="product.price_visible" class="mt-3">
+      <div v-if="product.price_visible" class="mt-2.5">
         <span class="text-[19px] font-extrabold leading-tight text-price">{{ formatPrice(product.price) }}</span>
         <span class="ml-1 text-[11px] font-medium text-muted">+ KDV</span>
         <span v-if="product.old_price" class="ml-2 text-xs text-muted line-through">
@@ -111,19 +113,19 @@ async function addToCart() {
         </span>
       </div>
 
-      <!-- Stepper + cart button need ~150px side by side. A 2-up card on a
-           320px screen has ~98px of content width, so they stack there and only
-           sit on one line once there's room. -->
-      <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <!-- Stepper + cart button need ~140px side by side. A 2-up card on a
+           320px screen doesn't have that, so they stack there and only sit on
+           one line once there's room. -->
+      <div class="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <!-- Pill to match the round cart button beside it. overflow-hidden
              clips the two divider lines to the pill's ends. -->
         <div
-          class="flex h-10 w-full items-center overflow-hidden rounded-full border border-line bg-white transition focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/15 sm:w-auto"
+          class="flex h-9 w-full items-center overflow-hidden rounded-full border border-line bg-white transition focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/15 sm:w-auto"
           :class="!product.in_stock && 'opacity-50'"
         >
           <button
             type="button" aria-label="Azalt"
-            class="h-full w-9 shrink-0 cursor-pointer text-lg leading-none text-muted transition hover:bg-neutral-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
+            class="h-full w-8 shrink-0 cursor-pointer text-base leading-none text-muted transition hover:bg-neutral-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="qty <= 1 || !product.in_stock"
             @click="setQty(qty - 1)"
           >−</button>
@@ -132,16 +134,16 @@ async function addToCart() {
             :value="qty"
             type="number" inputmode="numeric" min="1" max="999" aria-label="Adet"
             :disabled="!product.in_stock"
-            class="h-full w-full min-w-0 flex-1 border-x border-line bg-transparent text-center text-sm text-ink outline-none
+            class="h-full w-full min-w-0 flex-1 border-x border-line bg-transparent text-center text-[13px] text-ink outline-none
                    disabled:cursor-not-allowed
-                   [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none sm:w-14 sm:flex-none"
+                   [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none sm:w-12 sm:flex-none"
             @change="setQty(($event.target as HTMLInputElement).value)"
             @blur="setQty(($event.target as HTMLInputElement).value)"
           >
 
           <button
             type="button" aria-label="Artır"
-            class="h-full w-9 shrink-0 cursor-pointer text-lg leading-none text-muted transition hover:bg-neutral-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
+            class="h-full w-8 shrink-0 cursor-pointer text-base leading-none text-muted transition hover:bg-neutral-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="qty >= 999 || !product.in_stock"
             @click="setQty(qty + 1)"
           >+</button>
@@ -151,14 +153,14 @@ async function addToCart() {
           type="button"
           :disabled="!product.in_stock || pending"
           :aria-label="`${product.title} sepete ekle`"
-          class="flex h-10 w-full shrink-0 cursor-pointer items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-muted sm:w-10"
+          class="flex h-9 w-full shrink-0 cursor-pointer items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-muted sm:w-9"
           :class="added && 'bg-green-600 hover:bg-green-600'"
           @click="addToCart"
         >
-          <svg v-if="added" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg v-if="added" class="h-[17px] w-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="m5 13 4 4L19 7" />
           </svg>
-          <svg v-else class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <svg v-else class="h-[17px] w-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M3 5h3l2.2 10.5h10L20.5 8H7" /><circle cx="9.5" cy="19.5" r="1.5" /><circle cx="17.5" cy="19.5" r="1.5" />
           </svg>
         </button>

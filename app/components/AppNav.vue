@@ -10,6 +10,9 @@ const drawer = useState('nav-drawer', () => false)
 
 const route = useRoute()
 watch(() => route.fullPath, () => { drawer.value = false })
+
+// Where the "Yeni Ürünler" link points. Change this to your new-products route.
+const newArrivalsTo = '/shop?orderby=date&sort=newest'
 </script>
 
 <template>
@@ -83,6 +86,7 @@ watch(() => route.fullPath, () => { drawer.value = false })
             <NuxtLink to="/contact-us" class="text-ink hover:text-brand">İletişim</NuxtLink>
             <NuxtLink to="/about" class="text-ink hover:text-brand">Hakkımızda</NuxtLink>
             <span class="font-semibold text-price">5000 TL VE ÜZERİ ÜCRETSİZ KARGO</span>
+            <NuxtLink :to="newArrivalsTo" class="new-arrival">YENİ ÜRÜNLER</NuxtLink>
           </nav>
         </div>
       </div>
@@ -139,9 +143,52 @@ watch(() => route.fullPath, () => { drawer.value = false })
             <li><NuxtLink to="/shop" class="block px-5 py-3 text-[15px] text-ink">Mağaza</NuxtLink></li>
             <li><NuxtLink to="/contact-us" class="block px-5 py-3 text-[15px] text-ink">İletişim</NuxtLink></li>
             <li><NuxtLink to="/about" class="block px-5 py-3 text-[15px] text-ink">Hakkımızda</NuxtLink></li>
+            <li class="px-5 py-3">
+              <NuxtLink :to="newArrivalsTo" class="new-arrival">YENİ ÜRÜNLER</NuxtLink>
+            </li>
           </ul>
         </nav>
       </div>
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* Plain nav text filled with a slowly flowing pink-to-purple gradient. */
+.new-arrival {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: #c026d3; /* fallback for browsers without background-clip: text */
+  background-image: linear-gradient(90deg, #c026d3, #e11d48, #9333ea, #db2777, #c026d3);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: na-flow 5s linear infinite;
+  transition: filter 0.2s ease;
+}
+
+.new-arrival:hover {
+  filter: brightness(1.15) saturate(1.2);
+}
+
+.new-arrival:focus-visible {
+  outline: 2px solid #c026d3;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+@keyframes na-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-arrival {
+    animation: none;
+  }
+}
+</style>

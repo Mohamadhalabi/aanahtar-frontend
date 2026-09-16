@@ -142,7 +142,7 @@ useSeoMeta({
 
     <p class="mt-10 text-center text-sm text-muted">
       Sorularınız için
-      <NuxtLink to="/iletisim" class="text-brand hover:underline">satış ekibimize</NuxtLink>
+      <NuxtLink to="/contact-us" class="text-brand hover:underline">satış ekibimize</NuxtLink>
       doğrudan ulaşabilirsiniz.
     </p>
   </div>

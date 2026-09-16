@@ -101,7 +101,7 @@ const products = computed(() =>
                     v-for="b in deal.badges" :key="b.key"
                     class="rounded px-2 py-0.5 text-[10px] font-semibold text-white"
                     :class="{
-                      'bg-green-600': b.key === 'new',
+                      'bg-red-600': b.key === 'new',
                       'bg-brand': b.key === 'free_shipping',
                       'bg-amber-500': b.key === 'preorder',
                     }"

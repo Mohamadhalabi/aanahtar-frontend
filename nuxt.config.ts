@@ -37,10 +37,11 @@ export default defineNuxtConfig({
     // The handler does the proxying instead (attaches X-Client-Key), same-origin.
     '/images/uploads/**': { proxy: `${BACKEND}/images/uploads/**`, headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/images/sliders/**': { proxy: `${BACKEND}/images/sliders/**`, headers: { 'cache-control': 'public, max-age=86400' } },
+    // Every other folder in the backend's public storage (test, product, media ids, ...).
+    '/images/**':         { proxy: `${BACKEND}/images/**`,         headers: { 'cache-control': 'public, max-age=86400' } },
 
     '/sepet':    { headers: { 'cache-control': 'no-store' } },
     '/odeme/**': { ssr: true, headers: { 'cache-control': 'no-store' } },
-
   },
 
   nitro: {
