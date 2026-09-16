@@ -40,6 +40,7 @@ export default defineNuxtConfig({
 
     '/sepet':    { headers: { 'cache-control': 'no-store' } },
     '/odeme/**': { ssr: true, headers: { 'cache-control': 'no-store' } },
+
   },
 
   nitro: {

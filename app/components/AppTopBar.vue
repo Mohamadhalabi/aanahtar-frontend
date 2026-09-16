@@ -15,7 +15,10 @@ await load()
  */
 const { customer, isLoggedIn, fetchMe } = useAuth()
 
-await fetchMe()
+// Client-side only: the homepage is SWR-cached, so running fetchMe() during
+// SSR would bake a guest header into the cached HTML. Running it on mount
+// re-checks the real token cookie on every load and updates the header.
+onMounted(() => { fetchMe() })
 
 /**
  * First name only. Full names run long enough to wrap the top bar on mobile,

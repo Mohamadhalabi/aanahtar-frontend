@@ -2,30 +2,37 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const config = useRuntimeConfig()
 
-  // Forward the guest cart token so the backend can merge it into the account.
   const cartToken = getCookie(event, 'cart_token')
-
   const headers: Record<string, string> = {
     'X-Client-Key': config.clientKey as string,
   }
   if (cartToken) {
     headers['X-Cart-Token'] = cartToken
-    // Also pass as a cookie, since the backend reads $request->cookie('cart_token')
     headers['Cookie'] = `cart_token=${cartToken}`
   }
 
-  const res = await $fetch<{ token: string; customer: any }>(
-    `${config.backendOrigin}/api/auth/login`,
-    { method: 'POST', body, headers },
-  )
+  try {
+    const res = await $fetch<{ token: string; customer: any }>(
+      `${config.backendOrigin}/api/auth/login`,
+      { method: 'POST', body, headers },
+    )
+    return { customer: res.customer, token: res.token }
+  } catch (err: any) {
+    // Forward the backend's validation message (wrong password / not approved)
+    // instead of turning it into a generic "Server Error".
+    const status = err?.response?.status || 500
+    const data = err?.data
 
-  setCookie(event, 'auth_token', res.token, {
-    httpOnly: true,
-    secure: !import.meta.dev,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 30,
-  })
+    // Laravel validation errors: { message, errors: { email: ["..."] } }
+    const message =
+      data?.errors?.email?.[0] ||
+      data?.message ||
+      'Giriş yapılamadı.'
 
-  return { customer: res.customer }
+    throw createError({
+      statusCode: status,
+      statusMessage: message,
+      data: { message, errors: data?.errors },
+    })
+  }
 })
