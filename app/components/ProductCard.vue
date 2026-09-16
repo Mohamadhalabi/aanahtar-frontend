@@ -35,7 +35,7 @@ async function addToCart() {
        The hover lift uses transform (scale + translate) rather than width or
        padding, so nothing around it reflows; hover:z-10 keeps the grown card
        above its neighbours. -->
-  <div class="group relative flex min-w-0 transform-gpu flex-col rounded-lg border border-line bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,.08)] transition-all duration-200 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.025] hover:border-brand/20 hover:shadow-[0_12px_32px_rgba(0,0,0,.18)] motion-reduce:transform-none motion-reduce:hover:transform-none sm:p-4">
+  <div class="group relative flex min-w-0 transform-gpu flex-col rounded-lg border border-line bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,.08)] transition-all duration-200 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.025] hover:border-brand/20 hover:shadow-[0_12px_32px_rgba(0,0,0,.18)] motion-reduce:transform-none motion-reduce:hover:transform-none sm:p-3.5">
     <NuxtLink :to="`/urun/${product.slug}/`" class="block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
       <p class="mb-1.5 truncate text-[11px] text-muted">{{ product.category }}</p>
 
@@ -44,23 +44,23 @@ async function addToCart() {
            nothing to tell you the name continued. min-h keeps one- and
            two-line titles on the same baseline across a row. -->
       <h3
-        class="mb-2.5 line-clamp-2 min-h-[2.3rem] text-[13px] font-medium leading-[1.15rem] text-ink transition group-hover:text-brand [&_mark]:bg-brand/15 [&_mark]:font-semibold [&_mark]:text-brand"
+        class="mb-2 line-clamp-2 min-h-[2.3rem] text-[13px] font-medium leading-[1.15rem] text-ink transition group-hover:text-brand [&_mark]:bg-brand/15 [&_mark]:font-semibold [&_mark]:text-brand"
         :title="product.title"
         v-html="highlight(product.title, highlightTerm ?? '')"
       />
 
-      <!-- Square with a thin padding, so the photo sits just inside the card
-           edge instead of touching it. -->
-      <div class="relative aspect-square overflow-hidden rounded">
+      <!-- Slightly shorter than square (10:9) with a little padding: a touch
+           smaller than the full square without shrinking the photo much. -->
+      <div class="relative aspect-[10/9] overflow-hidden rounded">
         <NuxtImg
           v-if="product.thumb"
           :src="product.thumb"
           :alt="product.title"
-          width="500" height="500"
+          width="500" height="450"
           sizes="sm:50vw md:33vw lg:20vw"
           loading="lazy"
           draggable="false"
-          class="h-full w-full object-contain p-1 transition-transform duration-300 group-hover:scale-[1.08] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          class="h-full w-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-[1.08] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           :class="!product.in_stock && 'opacity-60'"
         />
         <div v-else class="h-full w-full rounded bg-neutral-50" />
@@ -106,7 +106,7 @@ async function addToCart() {
            moves up. The KDV note lives inside this block, so it disappears
            along with the price rather than dangling on its own. -->
       <div v-if="product.price_visible" class="mt-2.5">
-        <span class="text-[19px] font-extrabold leading-tight text-price">{{ formatPrice(product.price) }}</span>
+        <span class="text-[17px] font-extrabold leading-tight text-price">{{ formatPrice(product.price) }}</span>
         <span class="ml-1 text-[11px] font-medium text-muted">+ KDV</span>
         <span v-if="product.old_price" class="ml-2 text-xs text-muted line-through">
           {{ formatPrice(product.old_price) }}
