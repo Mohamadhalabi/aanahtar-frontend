@@ -29,6 +29,7 @@ const items = ref<Suggestion[]>([])
 const total = ref(0)
 const loading = ref(false)
 const active = ref(-1)
+const list = ref<HTMLUListElement | null>(null)
 
 // Suggest is a public route with no auth middleware, so without this header
 // the backend sees a guest and strips the prices.
@@ -62,6 +63,8 @@ async function fetchSuggestions(term: string) {
     const raw = res?.items
     items.value = Array.isArray(raw) ? raw : (raw?.data ?? [])
     total.value = res?.total ?? 0
+    // New results start at the top, not wherever the last list was scrolled.
+    nextTick(() => list.value?.scrollTo({ top: 0 }))
   } catch {
     if (mine === seq) {
       items.value = []
@@ -132,6 +135,12 @@ function seeAll() {
 function move(dir: number) {
   if (!items.value.length) return
   active.value = (active.value + dir + items.value.length) % items.value.length
+  // The list scrolls now, so arrowing past the last visible row has to bring
+  // the highlighted one into view (and wrap back to the top on the way round).
+  nextTick(() => {
+    const row = list.value?.children[active.value] as HTMLElement | undefined
+    row?.scrollIntoView({ block: 'nearest' })
+  })
 }
 
 function enter() {
@@ -147,44 +156,50 @@ defineExpose({ move, enter })
     v-if="visible"
     class="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-line bg-white shadow-[0_12px_40px_rgba(0,0,0,.14)]"
   >
-    <div v-if="loading && !items.length" class="space-y-3 p-4">
-      <div v-for="i in 3" :key="i" class="h-16 animate-pulse rounded-lg bg-neutral-100" />
+    <div v-if="loading && !items.length" class="space-y-2 p-3">
+      <div v-for="i in 3" :key="i" class="h-[52px] animate-pulse rounded-lg bg-neutral-100" />
     </div>
 
-    <div v-else-if="!items.length" class="px-4 py-8 text-center text-sm text-muted">
+    <div v-else-if="!items.length" class="px-4 py-6 text-center text-sm text-muted">
       Sonuç bulunamadı.
     </div>
 
     <template v-else>
-      <ul class="max-h-[30rem] divide-y divide-line overflow-y-auto">
+      <!-- Rows of ~66px in a list capped at 360px: about five and a half
+           rows show, so the half-cut row tells you there's more to
+           scroll. overscroll-contain keeps the page behind from scrolling
+           once you reach the end. -->
+      <ul ref="list" class="max-h-[360px] divide-y divide-line overflow-y-auto overscroll-contain">
         <li v-for="(item, i) in items" :key="item.id">
           <button
             type="button"
-            class="flex w-full cursor-pointer items-center gap-4 px-4 py-3.5 text-left transition"
+            class="flex w-full cursor-pointer items-center gap-3.5 px-4 py-2.5 text-left transition"
             :class="i === active ? 'bg-neutral-50' : 'hover:bg-neutral-50'"
             @mousedown.prevent="go(item)"
             @mouseenter="active = i"
           >
             <NuxtImg
               v-if="item.thumb" :src="item.thumb" :alt="item.title"
-              width="128" height="128" loading="lazy"
-              class="h-16 w-16 shrink-0 rounded-lg border border-line object-contain p-1"
+              width="104" height="104" loading="lazy"
+              class="h-[52px] w-[52px] shrink-0 rounded-md border border-line object-contain p-0.5"
             />
-            <div v-else class="h-16 w-16 shrink-0 rounded-lg bg-neutral-50" />
+            <div v-else class="h-[52px] w-[52px] shrink-0 rounded-md bg-neutral-50" />
 
             <span class="min-w-0 flex-1">
-              <!-- highlight() escapes the text and only injects <mark>. -->
+              <!-- highlight() escapes the text and only injects <mark>.
+                   One line, cut with an ellipsis; the full name is on hover. -->
               <span
-                class="block text-sm leading-snug text-ink [&_mark]:bg-brand/15 [&_mark]:font-semibold [&_mark]:text-brand"
+                class="block truncate text-sm leading-snug text-ink [&_mark]:bg-brand/15 [&_mark]:font-semibold [&_mark]:text-brand"
+                :title="item.title"
                 v-html="highlight(item.title, term)"
               />
-              <span class="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+              <span class="mt-0.5 flex min-w-0 items-center gap-x-2 text-xs text-muted">
                 <span
                   v-if="item.sku"
-                  class="[&_mark]:bg-brand/15 [&_mark]:text-brand"
+                  class="shrink-0 [&_mark]:bg-brand/15 [&_mark]:text-brand"
                   v-html="highlight(item.sku, term)"
                 />
-                <span v-if="item.category" class="text-muted">· {{ item.category }}</span>
+                <span v-if="item.category" class="truncate">· {{ item.category }}</span>
               </span>
             </span>
 
@@ -201,7 +216,7 @@ defineExpose({ move, enter })
       <button
         v-if="total > items.length"
         type="button"
-        class="w-full cursor-pointer border-t border-line bg-neutral-50 px-4 py-3.5 text-center text-sm font-medium text-brand transition hover:bg-neutral-100"
+        class="w-full cursor-pointer border-t border-line bg-neutral-50 px-4 py-3 text-center text-sm font-medium text-brand transition hover:bg-neutral-100"
         @mousedown.prevent="seeAll"
       >
         Tüm sonuçları gör ({{ total }})
