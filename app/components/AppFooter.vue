@@ -19,7 +19,7 @@ const remotes = computed(() =>
   <footer class="mt-16 bg-neutral-50">
     <div class="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 lg:grid-cols-[1fr_2fr]">
       <div class="min-w-0">
-        <NuxtImg src="/images/logo/aanahtar-logo.webp" alt="Anadolu Anahtar" width="340" height="80" class="h-20 w-auto" loading="lazy" />
+        <NuxtImg src="/static/logo/aanahtar-logo.webp" alt="Anadolu Anahtar" width="340" height="80" class="h-20 w-auto" loading="lazy" />
 
         <div class="mt-6 flex items-center gap-3">
           <svg class="h-9 w-9 text-brand-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">

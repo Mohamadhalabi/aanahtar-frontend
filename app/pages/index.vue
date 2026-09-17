@@ -37,7 +37,7 @@ onMounted(() => {
  * not merchandising that changes weekly, and putting them behind an endpoint
  * would mean a backend change every time the wording moves. Edit here.
  *
- * Images go in public/images/promos/ — square-ish, transparent or white
+ * Images go in public/static/promos/ — square-ish, transparent or white
  * background, since they sit on a light grey card.
  */
 const highlights = [
@@ -45,27 +45,27 @@ const highlights = [
     kicker: 'Açma Kapama',
     title: 'Anadolu Plus',
     to: '/product-category/acma-kapama/',
-    image: '/images/promos/acma-kapama.webp',
+    image: '/static/promos/acma-kapama.webp',
   },
   {
     kicker: 'Uzaktan Çalıştırma',
     title: 'Anadolu Plus',
     to: '/product-category/universal-uzaktan-calistirma/',
-    image: '/images/promos/uzaktan-calistirma.webp',
+    image: '/static/promos/uzaktan-calistirma.webp',
   },
   {
     kicker: 'Lonsdor',
     title: 'K518Pro Cihazı',
     note: 'Yeni',
     to: '/urun/8840-yeni-lonsdor-k518-pro-k518pro-versatile-anahtar-programci/',
-    image: '/images/promos/lonsdor-k518pro.webp',
+    image: '/static/promos/lonsdor-k518pro.webp',
   },
   {
     kicker: 'Türkiyede Tek',
     title: 'Pluto JLR',
     note: 'Distribütör',
     to: '/urun/8855-pluto-jlr-rangerover-engineering-tool',
-    image: '/images/promos/pluto-jlr.webp',
+    image: '/static/promos/pluto-jlr.webp',
   },
 ]
 

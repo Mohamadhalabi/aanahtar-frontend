@@ -1,15 +1,15 @@
 <script setup lang="ts">
 /**
- * Team. Photos go in public/images/team/ — the paths below expect
+ * Team. Photos go in public/static/team/ — the paths below expect
  * kerem.webp, huseyin.webp, ziya.webp, emin.webp, muhammet.webp.
  * Square images work best; the frame crops to a circle.
  */
 const team = [
-  { name: 'Kerem',    role: 'Satış', photo: '/images/team/kerem.webp' },
-  { name: 'Hüseyin',  role: 'Satış', photo: '/images/team/huseyin.webp' },
-  { name: 'Ziya',     role: 'Satış', photo: '/images/team/ziya.webp' },
-  { name: 'Emin',     role: 'Satış', photo: '/images/team/emin.webp' },
-  { name: 'Muhammet', role: 'Satış', photo: '/images/team/muhammet.webp' },
+  { name: 'Kerem',    role: 'Satış', photo: '/static/team/kerem.webp' },
+  { name: 'Hüseyin',  role: 'Satış', photo: '/static/team/huseyin.webp' },
+  { name: 'Ziya',     role: 'Satış', photo: '/static/team/ziya.webp' },
+  { name: 'Emin',     role: 'Satış', photo: '/static/team/emin.webp' },
+  { name: 'Muhammet', role: 'Satış', photo: '/static/team/muhammet.webp' },
 ]
 
 const intro = [

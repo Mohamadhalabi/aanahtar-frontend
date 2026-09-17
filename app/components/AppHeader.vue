@@ -88,7 +88,7 @@ function onEnter(which: 'desktop' | 'mobile') {
         <!-- 266x62, so h-11 renders 189px wide — too much of a narrow row.
              h-9 brings it to 154px and it scales back up from sm. -->
         <NuxtImg
-          src="/images/logo/aanahtar-logo.webp"
+          src="/static/logo/aanahtar-logo.webp"
           alt="Anadolu Anahtar"
           width="266" height="62"
           class="h-12 w-auto max-w-full sm:h-14 lg:h-[72px]"
