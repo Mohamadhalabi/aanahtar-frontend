@@ -74,6 +74,9 @@ const couponBusy = ref(false)
 const couponError = ref('')
 
 async function applyCoupon() {
+  // Enter key and button can both fire; ignore anything while one is in flight.
+  if (couponBusy.value) return
+
   const code = couponCode.value.trim()
   if (!code) return
 
@@ -101,6 +104,8 @@ async function applyCoupon() {
 }
 
 async function removeCoupon() {
+  if (couponBusy.value) return
+
   couponBusy.value = true
   couponError.value = ''
 
@@ -121,20 +126,38 @@ async function removeCoupon() {
 /* --- Submit ------------------------------------------------------------- */
 
 const busy = ref(false)
+// True once the server has created the order. From then on the button stays
+// locked for good — there is no second order to place from this page.
+const placed = ref(false)
 const error = ref('')
 const fieldErrors = ref<Record<string, string[]>>({})
 
+// One key per checkout attempt, sent with every submit until an order exists.
+// If the same request reaches the server twice (double click that slipped
+// through, network retry, two tabs), the backend can recognise it and return
+// the existing order instead of creating another.
+let idempotencyKey: string | null = null
+
 async function submit() {
+  // Checked synchronously, before anything else. Setting busy disables the
+  // button only on the next render, so two quick clicks would otherwise both
+  // get here and send two orders.
+  if (busy.value || placed.value) return
+
   busy.value = true
   error.value = ''
   fieldErrors.value = {}
+
+  idempotencyKey ??= crypto.randomUUID()
 
   try {
     const res = await $fetch<{ order_number: string; redirect_url: string | null }>('/api/orders', {
       method: 'POST',
       body: form,
-      headers: authHeader(),
+      headers: { ...authHeader(), 'Idempotency-Key': idempotencyKey },
     })
+
+    placed.value = true
 
     // Card orders keep their cart until the money actually lands, so there's
     // nothing to reload here — go straight to iyzico's hosted page. The return
@@ -152,9 +175,10 @@ async function submit() {
     error.value = e?.data?.message ?? 'Sipariş oluşturulamadı.'
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } finally {
-    // Left busy on a card redirect: the browser is already navigating away and
-    // re-enabling the button invites a second order.
-    if (!isCard.value) busy.value = false
+    // Unlocked only when no order was created, so the customer can fix the
+    // form and retry. Once an order exists — havale or card — it stays locked:
+    // the page is navigating away and a re-enabled button invites a duplicate.
+    if (!placed.value) busy.value = false
   }
 }
 
@@ -314,7 +338,7 @@ useSeoMeta({ title: 'Ödeme' })
                 <button
                   type="button"
                   class="shrink-0 cursor-pointer text-xs text-muted underline-offset-2 transition hover:text-danger hover:underline disabled:opacity-50"
-                  :disabled="couponBusy"
+                  :disabled="couponBusy || busy || placed"
                   @click="removeCoupon"
                 >
                   Kaldır
@@ -337,7 +361,7 @@ useSeoMeta({ title: 'Ödeme' })
                   <button
                     type="button"
                     class="h-10 shrink-0 cursor-pointer rounded-xl border border-line px-4 text-sm text-ink transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="couponBusy || !couponCode.trim()"
+                    :disabled="couponBusy || busy || placed || !couponCode.trim()"
                     @click="applyCoupon"
                   >
                     {{ couponBusy ? '…' : 'Uygula' }}
@@ -373,6 +397,7 @@ useSeoMeta({ title: 'Ödeme' })
             <label class="flex cursor-pointer items-start gap-3 px-4 py-3">
               <input
                 v-model="form.payment_method" type="radio" value="havale"
+                :disabled="busy || placed"
                 class="mt-1 accent-[var(--color-brand,#2183B0)]"
               >
               <span>
@@ -386,6 +411,7 @@ useSeoMeta({ title: 'Ödeme' })
             <label class="flex cursor-pointer items-start gap-3 px-4 py-3">
               <input
                 v-model="form.payment_method" type="radio" value="card"
+                :disabled="busy || placed"
                 class="mt-1 accent-[var(--color-brand,#2183B0)]"
               >
               <span>
@@ -409,10 +435,11 @@ useSeoMeta({ title: 'Ödeme' })
           <button
             type="button"
             class="btn-primary mt-5 w-full"
-            :disabled="busy || !form.terms"
+            :disabled="busy || placed || !form.terms"
+            :aria-busy="busy"
             @click="submit"
           >
-            <template v-if="busy">
+            <template v-if="busy || placed">
               {{ isCard ? 'Ödeme sayfasına yönlendiriliyorsunuz…' : 'Gönderiliyor…' }}
             </template>
             <template v-else>
